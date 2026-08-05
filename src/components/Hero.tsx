@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion'
 import { CalendarCheck, ChevronDown, Sparkle, Star, Users } from 'lucide-react'
+import { heroBackground } from '../data/images'
 
 const stats = [
   { value: '12+', label: 'Años de experiencia' },
@@ -35,6 +36,15 @@ function BarberPole() {
 export default function Hero() {
   return (
     <section id="inicio" className="relative flex min-h-screen items-center overflow-hidden pt-24">
+      <div className="absolute inset-0 -z-10">
+        <img
+          src={heroBackground}
+          alt="Barbería en movimiento"
+          className="h-full w-full scale-105 object-cover opacity-40 animate-kenburns"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#02120f]/85 via-[#02120f]/70 to-[#02120f]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_20%,rgba(2,18,15,0.6)_100%)]" />
+      </div>
       <div className="mx-auto grid w-full max-w-7xl items-center gap-12 px-5 py-16 lg:grid-cols-2 lg:px-8">
         <div>
           <motion.div

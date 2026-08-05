@@ -60,9 +60,20 @@ git push -u origin main
 https://TU_USUARIO.github.io/barber-show/
 ```
 
+## Administrador de la página
+
+La web incluye un **panel de administración** para cambiar el celular, correo, dirección, WhatsApp, redes sociales y horarios sin tocar el código.
+
+1. Entra a la web y haz clic en **"Administrar página"** (enlace pequeño en el footer).
+2. Ingresa la contraseña. Por defecto es: `exclusive123`
+3. Edita los datos y pulsa **Guardar cambios**.
+
+Notas:
+- La contraseña se cambia en `src/data/settings.ts` (constante `ADMIN_PASSWORD`).
+- Los cambios se guardan en el navegador donde se editen (localStorage). Son ideales para editar desde el equipo de la barbería.
+- Para que los cambios aparezcan para todos los visitantes desde cualquier dispositivo, sustituye los valores por defecto en `src/data/settings.ts` y vuelve a subir los cambios (`git push`).
+
 ## Notas
 
 - Las imágenes del carrusel y la galería son fotos de muestra de Unsplash (URLs públicas). Reemplázalas en `src/data/images.ts` por las fotos reales de tu barbería.
-- Personaliza nombre, teléfono, dirección y correo en `src/components/Contact.tsx` y `src/components/Footer.tsx`.
-- Los precios y servicios se editan en `src/components/Pricing.tsx` y `src/components/Services.tsx`.
 - La paleta de colores se define en `src/index.css` dentro del bloque `@theme` (turquesa `#14b8a6`, fondo `#02120f`, acento dorado `#f0c26b`).

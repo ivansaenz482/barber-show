@@ -9,10 +9,12 @@ import Pricing from './components/Pricing'
 import Testimonials from './components/Testimonials'
 import Contact from './components/Contact'
 import Footer from './components/Footer'
+import AdminPanel from './components/AdminPanel'
+import SettingsProvider from './context/SettingsProvider'
 
 function App() {
   return (
-    <>
+    <SettingsProvider>
       <AnimatedBackground />
       <Navbar />
       <main>
@@ -26,7 +28,8 @@ function App() {
         <Contact />
       </main>
       <Footer />
-    </>
+      <AdminPanel />
+    </SettingsProvider>
   )
 }
 

@@ -7,6 +7,7 @@ import SectionHeader from './SectionHeader'
 const filters: { value: Category | 'todos'; label: string }[] = [
   { value: 'todos', label: 'Todos' },
   { value: 'barberia', label: 'La Barbería' },
+  { value: 'cortes', label: 'Cortes' },
   { value: 'adultos', label: 'Adultos' },
   { value: 'jovenes', label: 'Jóvenes' },
 ]

@@ -1,21 +1,18 @@
 import { type FormEvent, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Clock, Mail, MapPin, Phone, Send } from 'lucide-react'
+import { Clock, Mail, MapPin, MessageCircle, Phone, Send } from 'lucide-react'
 import SectionHeader from './SectionHeader'
+import { useSettings } from '../context/settings-context'
 
 const contactInfo = [
-  { icon: MapPin, label: 'Dirección', value: 'Av. Principal 123, Centro' },
-  { icon: Phone, label: 'Teléfono', value: '+1 555 123 4567' },
-  { icon: Mail, label: 'Email', value: 'hola@barbershow.com' },
-]
-
-const hours = [
-  { day: 'Lunes a Viernes', time: '9:00 – 20:00' },
-  { day: 'Sábado', time: '9:00 – 21:00' },
-  { day: 'Domingo', time: 'Cerrado' },
+  { icon: MapPin, label: 'Dirección', key: 'address' as const },
+  { icon: Phone, label: 'Teléfono', key: 'phone' as const },
+  { icon: Mail, label: 'Email', key: 'email' as const },
+  { icon: MessageCircle, label: 'WhatsApp', key: 'whatsapp' as const },
 ]
 
 export default function Contact() {
+  const { settings } = useSettings()
   const [sent, setSent] = useState(false)
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
@@ -47,11 +44,11 @@ export default function Contact() {
               <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-primary to-accent text-background">
                 <info.icon size={20} />
               </span>
-              <div>
+              <div className="min-w-0">
                 <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
                   {info.label}
                 </p>
-                <p className="mt-1 font-semibold text-white">{info.value}</p>
+                <p className="mt-1 truncate font-semibold text-white">{settings[info.key]}</p>
               </div>
             </div>
           ))}
@@ -62,8 +59,8 @@ export default function Contact() {
               <h3 className="font-display font-bold text-white">Horario</h3>
             </div>
             <ul className="flex flex-col gap-3">
-              {hours.map((h) => (
-                <li key={h.day} className="flex items-center justify-between text-sm">
+              {settings.hours.map((h) => (
+                <li key={h.id} className="flex items-center justify-between text-sm">
                   <span className="text-slate-400">{h.day}</span>
                   <span className="font-semibold text-primary-light">{h.time}</span>
                 </li>

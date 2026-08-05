@@ -1,6 +1,9 @@
-import { AtSign, Camera, MessageCircle, Scissors } from 'lucide-react'
+import { Globe, Scissors, Settings } from 'lucide-react'
+import { useSettings } from '../context/settings-context'
 
 export default function Footer() {
+  const { settings } = useSettings()
+
   return (
     <footer className="border-t border-primary/15 bg-[#010b09]">
       <div className="mx-auto grid max-w-7xl gap-10 px-5 py-16 sm:grid-cols-2 lg:grid-cols-4 lg:px-8">
@@ -22,15 +25,18 @@ export default function Footer() {
             Barbería premium con cortes clásicos y modernos para adultos, jóvenes y niños. Tu
             imagen es nuestra pasión.
           </p>
-          <div className="mt-6 flex gap-3">
-            {[Camera, MessageCircle, AtSign].map((Icon, i) => (
+          <div className="mt-6 flex flex-wrap gap-3">
+            {settings.socials.map((s) => (
               <a
-                key={i}
-                href="#inicio"
-                aria-label="Red social"
+                key={s.id}
+                href={s.url}
+                target="_blank"
+                rel="noreferrer"
+                aria-label={s.label}
+                title={s.label}
                 className="grid h-10 w-10 place-items-center rounded-full border border-primary/20 text-primary-light transition-colors hover:bg-primary hover:text-background"
               >
-                <Icon size={18} />
+                <Globe size={18} />
               </a>
             ))}
           </div>
@@ -75,18 +81,31 @@ export default function Footer() {
             Contacto
           </h3>
           <ul className="mt-5 flex flex-col gap-3 text-sm text-slate-400">
-            <li>Av. Principal 123, Centro</li>
-            <li>+1 555 123 4567</li>
-            <li>hola@barbershow.com</li>
-            <li>Lun–Sáb: 9:00 – 21:00</li>
+            <li>{settings.address}</li>
+            <li>{settings.phone}</li>
+            <li>{settings.email}</li>
+            {settings.hours.slice(0, 2).map((h) => (
+              <li key={h.id}>
+                {h.day}: {h.time}
+              </li>
+            ))}
           </ul>
         </div>
       </div>
 
       <div className="border-t border-primary/10 py-6">
-        <p className="text-center text-xs text-slate-500">
-          © {new Date().getFullYear()} Barber Show. Todos los derechos reservados.
-        </p>
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-5 sm:flex-row lg:px-8">
+          <p className="text-center text-xs text-slate-500">
+            © {new Date().getFullYear()} Exclusive Barber Show. Todos los derechos reservados.
+          </p>
+          <a
+            href="#admin"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 transition-colors hover:text-primary-light"
+          >
+            <Settings size={13} />
+            Administrar página
+          </a>
+        </div>
       </div>
     </footer>
   )
