@@ -1,6 +1,7 @@
 import { Scissors } from 'lucide-react'
 
 const items = [
+  'EXCLUSIVE',
   'CORTE CLÁSICO',
   'FADE MODERNO',
   'PERFILADO DE BARBA',
@@ -17,7 +18,11 @@ export default function Marquee() {
         {row.map((item, i) => (
           <span
             key={i}
-            className="flex items-center gap-8 whitespace-nowrap font-display text-sm font-bold tracking-[0.25em] text-primary-light"
+            className={`flex items-center gap-8 whitespace-nowrap font-display text-sm font-bold tracking-[0.25em] ${
+              item === 'EXCLUSIVE'
+                ? 'text-gradient-animated text-base font-black tracking-[0.4em]'
+                : 'text-primary-light'
+            }`}
           >
             {item}
             <Scissors size={16} className="text-gold" />

@@ -70,7 +70,7 @@ export default function Carousel() {
                 transition={{ delay: 0.2, duration: 0.5 }}
                 className="text-xs font-bold uppercase tracking-[0.3em] text-accent"
               >
-                Barber Show
+                Exclusive Barber Show
               </motion.p>
               <motion.h3
                 initial={{ opacity: 0, y: 16 }}

@@ -75,6 +75,30 @@ body {
   color: transparent;
 }
 
+.text-gradient-animated {
+  background: linear-gradient(90deg, #2dd4bf, #22d3ee, #ffffff, #f0c26b, #2dd4bf);
+  background-size: 300% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shimmer 5s linear infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 0% center;
+  }
+  100% {
+    background-position: 300% center;
+  }
+}
+
+.text-glow {
+  text-shadow:
+    0 0 24px rgba(34, 211, 238, 0.45),
+    0 0 64px rgba(20, 184, 166, 0.35);
+}
+
 .glass {
   background: rgba(5, 35, 29, 0.55);
   backdrop-filter: blur(14px);

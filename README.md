@@ -1,6 +1,6 @@
-# Barber Show — Barbería Premium
+# Exclusive Barber Show — Barbería Premium
 
-Sitio web profesional para una barbería (barber show), con diseño **dark premium turquesa**, listo para verse en cualquier parte del mundo mediante **GitHub Pages**.
+Sitio web profesional para una barbería (barber show) de marca **EXCLUSIVE**, con diseño **dark premium turquesa**, listo para verse en cualquier parte del mundo mediante **GitHub Pages**.
 
 ![Tech](https://img.shields.io/badge/React-19-14b8a6) ![Tech](https://img.shields.io/badge/Vite-8-14b8a6) ![Tech](https://img.shields.io/badge/Tailwind-4-14b8a6) ![Tech](https://img.shields.io/badge/Framer_Motion-13-14b8a6)
 

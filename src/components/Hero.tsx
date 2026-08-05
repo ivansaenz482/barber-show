@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { CalendarCheck, ChevronDown, Star, Users } from 'lucide-react'
+import { CalendarCheck, ChevronDown, Sparkle, Star, Users } from 'lucide-react'
 
 const stats = [
   { value: '12+', label: 'Años de experiencia' },
@@ -44,28 +44,58 @@ export default function Hero() {
             className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-primary-light"
           >
             <Star size={14} className="fill-gold text-gold" />
-            Barbería Premium
+            Exclusive Barber Show
           </motion.div>
 
           <motion.h1
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.1 }}
-            className="font-display text-4xl font-black leading-tight text-white sm:text-5xl lg:text-6xl"
+            transition={{ duration: 0.8, delay: 0.1 }}
+            className="font-display font-black leading-none"
           >
-            EL ARTE DE
-            <br />
-            <span className="text-gradient">CORTAR BIEN</span>
+            <span className="block text-5xl tracking-tight text-white sm:text-7xl lg:text-8xl">
+              EXCLUSIVE
+            </span>
+            <span className="mt-3 flex items-center justify-center gap-4 sm:justify-start">
+              <motion.span
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.6, duration: 0.5 }}
+                className="hidden h-0.5 w-10 bg-gradient-to-r from-transparent to-primary sm:block"
+              />
+              <span className="font-display text-2xl font-extrabold tracking-[0.35em] text-gradient-animated sm:text-4xl">
+                BARBER SHOW
+              </span>
+              <motion.span
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.6, duration: 0.5 }}
+                className="hidden h-0.5 w-10 bg-gradient-to-l from-transparent to-primary sm:block"
+              />
+            </span>
+            <span className="mt-2 block text-xs font-semibold uppercase tracking-[0.6em] text-slate-400 sm:text-sm">
+              El arte de cortar bien
+            </span>
           </motion.h1>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.5 }}
+            className="mt-5 inline-flex items-center gap-2 rounded-full border border-gold/40 bg-gold/10 px-4 py-1.5 text-xs font-bold uppercase tracking-[0.25em] text-gold"
+          >
+            <Sparkle size={14} className="fill-gold" />
+            Estilo que impresiona
+          </motion.div>
 
           <motion.p
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.2 }}
+            transition={{ duration: 0.7, delay: 0.6 }}
             className="mt-6 max-w-xl text-lg leading-relaxed text-slate-300"
           >
             Cortes clásicos y modernos para adultos, jóvenes y niños. Un espacio donde tradición,
-            precisión y estilo se unen para que cada visita sea una experiencia premium.
+            precisión y estilo se unen para que cada visita sea una experiencia exclusiva.
           </motion.p>
 
           <motion.div

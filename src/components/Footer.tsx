@@ -5,12 +5,17 @@ export default function Footer() {
     <footer className="border-t border-primary/15 bg-[#010b09]">
       <div className="mx-auto grid max-w-7xl gap-10 px-5 py-16 sm:grid-cols-2 lg:grid-cols-4 lg:px-8">
         <div className="sm:col-span-2 lg:col-span-1">
-          <a href="#inicio" className="flex items-center gap-2.5">
-            <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-primary to-accent text-background">
-              <Scissors size={20} strokeWidth={2.5} />
+          <a href="#inicio" className="flex items-center gap-3">
+            <span className="grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-primary to-accent text-background shadow-lg shadow-primary/30">
+              <Scissors size={22} strokeWidth={2.5} />
             </span>
-            <span className="font-display text-lg font-extrabold tracking-widest text-white">
-              BARBER<span className="text-primary"> SHOW</span>
+            <span className="flex flex-col leading-none">
+              <span className="font-display text-2xl font-black tracking-[0.18em] text-gradient-animated">
+                EXCLUSIVE
+              </span>
+              <span className="mt-1 text-[10px] font-bold uppercase tracking-[0.52em] text-slate-300">
+                Barber <span className="text-primary-light">Show</span>
+              </span>
             </span>
           </a>
           <p className="mt-4 max-w-xs text-sm leading-relaxed text-slate-400">
