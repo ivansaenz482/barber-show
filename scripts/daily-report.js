@@ -2,7 +2,7 @@ import { cert, initializeApp } from 'firebase-admin/app'
 import { getFirestore } from 'firebase-admin/firestore'
 import nodemailer from 'nodemailer'
 
-const TIMEZONE = process.env.REPORT_TIMEZONE || 'America/Costa_Rica'
+const TIMEZONE = process.env.REPORT_TIMEZONE || 'America/Guayaquil'
 const GMAIL_USER = process.env.GMAIL_USER || ''
 const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD || ''
 const REPORT_EMAIL = process.env.REPORT_EMAIL || GMAIL_USER

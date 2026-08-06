@@ -1,11 +1,11 @@
 name: Reporte diario
 
 # Se ejecuta todos los días a las 11:45 PM.
-# GitHub Actions usa UTC: 05:45 UTC equivale a 11:45 PM en Costa Rica (UTC-6).
-# Si estás en otro huso horario, ajusta la hora UTC (hora local + 6 horas).
+# GitHub Actions usa UTC: 04:45 UTC equivale a 11:45 PM en Ecuador (UTC-5).
+# Si estás en otro huso horario, ajusta la hora UTC (hora local + 5 horas).
 on:
   schedule:
-    - cron: '45 5 * * *'
+    - cron: '45 4 * * *'
   workflow_dispatch:
 
 permissions:
