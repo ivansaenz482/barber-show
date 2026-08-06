@@ -15,7 +15,6 @@ import { firestore, isCloudConnected } from './firebase'
 type Doc = Record<string, unknown>
 
 const LS_PREFIX = 'exclusive_data_'
-const LS_STATS = 'exclusive_stats'
 
 function uid() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8)
@@ -75,25 +74,15 @@ async function cloudRemove(coll: string, id: string) {
   await deleteDoc(ref)
 }
 
-function lsStatsGet(id: string): Doc {
-  try {
-    const raw = localStorage.getItem(LS_STATS)
-    const all = raw ? JSON.parse(raw) : {}
-    return all[id] ?? {}
-  } catch {
-    return {}
-  }
+async function cloudGetDoc(coll: string, id: string): Promise<Doc | null> {
+  const ref = doc(firestore!, coll, id)
+  const snap = await getDoc(ref)
+  return snap.exists() ? { id: snap.id, ...snap.data() } : null
 }
 
-function lsStatsSet(id: string, data: Doc) {
-  try {
-    const raw = localStorage.getItem(LS_STATS)
-    const all = raw ? JSON.parse(raw) : {}
-    all[id] = data
-    localStorage.setItem(LS_STATS, JSON.stringify(all))
-  } catch {
-    /* ignore */
-  }
+async function cloudSetDoc(coll: string, id: string, data: Doc) {
+  const ref = doc(firestore!, coll, id)
+  await setDoc(ref, data, { merge: true })
 }
 
 export const store = {
@@ -150,22 +139,28 @@ export const store = {
     return addLocalListener(coll, emit)
   },
 
+  async getDoc(coll: string, id: string): Promise<Doc | null> {
+    if (isCloudConnected()) return cloudGetDoc(coll, id)
+    const list = lsRead(coll)
+    return list.find((d) => d.id === id) ?? null
+  },
+
+  async setDoc(coll: string, id: string, data: Doc) {
+    if (isCloudConnected()) return cloudSetDoc(coll, id, data)
+    const list = lsRead(coll)
+    const idx = list.findIndex((d) => d.id === id)
+    if (idx >= 0) list[idx] = { ...list[idx], ...data }
+    else list.push({ id, ...data })
+    lsWrite(coll, list)
+  },
+
   async statsGet(id: string): Promise<Doc> {
-    if (isCloudConnected()) {
-      const ref = doc(firestore!, 'stats', id)
-      const snap = await getDoc(ref)
-      return snap.exists() ? (snap.data() as Doc) : {}
-    }
-    return lsStatsGet(id)
+    const data = await store.getDoc('stats', id)
+    return data ?? {}
   },
 
   async statsSet(id: string, data: Doc) {
-    if (isCloudConnected()) {
-      const ref = doc(firestore!, 'stats', id)
-      await setDoc(ref, data, { merge: true })
-      return
-    }
-    lsStatsSet(id, data)
+    await store.setDoc('stats', id, data)
   },
 
   async statsIncrement(id: string, field: string) {
@@ -174,8 +169,8 @@ export const store = {
       await setDoc(ref, { [field]: increment(1) }, { merge: true })
       return
     }
-    const cur = lsStatsGet(id)
-    const next = { ...cur, [field]: (Number(cur[field]) || 0) + 1 }
-    lsStatsSet(id, next)
+    const cur = await store.getDoc('stats', id)
+    const next = { ...cur, [field]: (Number(cur?.[field]) || 0) + 1 }
+    await store.setDoc('stats', id, next)
   },
 }

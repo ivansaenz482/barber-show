@@ -114,21 +114,26 @@ export default function DataProvider({ children }: { children: ReactNode }) {
   }, [cart])
 
   useEffect(() => {
-    if (!cloud) {
-      if (services.length === 0) {
-        seedServices.forEach((s) => store.add('services', s))
+    let cancelled = false
+    const seed = async () => {
+      if (services.length > 0 || products.length > 0 || promotions.length > 0) return
+      const meta = await store.getDoc('_meta', 'seed')
+      if (meta?.done) return
+      for (const s of seedServices) await store.add('services', s)
+      for (const p of seedProducts) await store.add('products', p)
+      for (const p of seedPromotions) await store.add('promotions', p)
+      await store.setDoc('_meta', 'seed', { done: true, at: new Date().toISOString() })
+      if (!cancelled) {
         setServices(seedServices as Service[])
-      }
-      if (products.length === 0) {
-        seedProducts.forEach((p) => store.add('products', p))
         setProducts(seedProducts as Product[])
-      }
-      if (promotions.length === 0) {
-        seedPromotions.forEach((p) => store.add('promotions', p))
         setPromotions(seedPromotions as Promotion[])
       }
     }
-  }, [cloud, services.length, products.length, promotions.length])
+    seed()
+    return () => {
+      cancelled = true
+    }
+  }, [services.length, products.length, promotions.length])
 
   useEffect(() => {
     const id = localStorage.getItem(CLIENT_KEY)

@@ -1,0 +1,11 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // La web es pública: los visitantes leen servicios, productos y
+    // promociones, y pueden registrarse, reservar y pedir sin crear cuenta.
+    // (Equivalente al modo de prueba pero sin fecha de caducidad.)
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}
