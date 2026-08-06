@@ -5,6 +5,7 @@ import {
   BarChart3,
   Cake,
   ClipboardList,
+  DollarSign,
   Eye,
   EyeOff,
   Gift,
@@ -19,6 +20,7 @@ import {
   ShoppingBag,
   Trash2,
   UserCheck,
+  UserRound,
   Users,
   X,
 } from 'lucide-react'
@@ -174,6 +176,7 @@ function ImageInput({
 
 const tabs = [
   { key: 'stats', label: 'Estadísticas', icon: BarChart3 },
+  { key: 'barbers', label: 'Barberos', icon: UserRound },
   { key: 'services', label: 'Servicios', icon: Scissors },
   { key: 'products', label: 'Productos', icon: ShoppingBag },
   { key: 'promotions', label: 'Promociones', icon: Gift },
@@ -317,6 +320,7 @@ export default function AdminPanel() {
 
                 <div className="mt-6">
                   {tab === 'stats' && <StatsTab />}
+                  {tab === 'barbers' && <BarbersTab />}
                   {tab === 'services' && <ServicesTab />}
                   {tab === 'products' && <ProductsTab />}
                   {tab === 'promotions' && <PromotionsTab />}
@@ -341,7 +345,32 @@ export default function AdminPanel() {
 }
 
 function StatsTab() {
-  const { stats, clients, orders, appointments, visits } = useData()
+  const { stats, clients, orders, appointments, visits, barbers } = useData()
+
+  const cutsRevenue = useMemo(
+    () => appointments.reduce((sum, a) => sum + (Number(a.price) || 0), 0),
+    [appointments],
+  )
+
+  const storeRevenue = useMemo(
+    () => orders.reduce((sum, o) => sum + (Number(o.total) || 0), 0),
+    [orders],
+  )
+
+  const totalRevenue = cutsRevenue + storeRevenue
+
+  const barberStats = useMemo(
+    () =>
+      barbers.map((b) => {
+        const cuts = appointments.filter((a) => a.barberId === b.id)
+        return {
+          name: b.name,
+          cuts: cuts.length,
+          revenue: cuts.reduce((sum, a) => sum + (Number(a.price) || 0), 0),
+        }
+      }),
+    [barbers, appointments],
+  )
 
   const bestSellers = useMemo(() => {
     const agg: Record<string, number> = {}
@@ -370,50 +399,108 @@ function StatsTab() {
         <StatCard label="Pedidos" value={orders.length} icon={ShoppingBag} accent="bg-gold/20 text-gold" />
       </div>
 
+      <div className="rounded-2xl border border-primary/15 bg-surface p-5">
+        <div className="mb-4 flex items-center gap-2">
+          <DollarSign size={18} className="text-gold" />
+          <h3 className="text-sm font-bold uppercase tracking-wider text-primary-light">
+            Ingresos
+          </h3>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <div>
+            <p className="font-display text-2xl font-extrabold text-white">
+              ${cutsRevenue.toFixed(2)}
+            </p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+              Por cortes
+            </p>
+          </div>
+          <div>
+            <p className="font-display text-2xl font-extrabold text-white">
+              ${storeRevenue.toFixed(2)}
+            </p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+              Por tienda
+            </p>
+          </div>
+          <div className="rounded-xl bg-gold/15 px-4 py-2">
+            <p className="font-display text-2xl font-extrabold text-gold">
+              ${totalRevenue.toFixed(2)}
+            </p>
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+              Ingresos totales
+            </p>
+          </div>
+        </div>
+      </div>
+
       <div className="grid gap-5 lg:grid-cols-2">
         <div className="rounded-2xl border border-primary/15 bg-surface p-5">
           <h3 className="mb-4 text-sm font-bold uppercase tracking-wider text-primary-light">
-            Productos más vendidos
+            Rendimiento por barbero
           </h3>
-          {bestSellers.length === 0 ? (
-            <p className="text-sm text-slate-400">Aún no hay ventas registradas.</p>
-          ) : (
-            <ul className="flex flex-col gap-2">
-              {bestSellers.map(([name, qty], i) => (
-                <li key={name} className="flex items-center justify-between text-sm">
-                  <span className="text-slate-300">
-                    {i + 1}. {name}
-                  </span>
-                  <span className="font-bold text-gold">{qty} u.</span>
-                </li>
-              ))}
-            </ul>
-          )}
+          <ul className="flex flex-col gap-2">
+            {barberStats.map((b) => (
+              <li key={b.name} className="rounded-xl border border-primary/10 bg-card px-4 py-3">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="font-semibold text-white">{b.name}</span>
+                  <span className="font-bold text-gold">${b.revenue.toFixed(2)}</span>
+                </div>
+                <div className="mt-1 flex items-center justify-between text-xs text-slate-400">
+                  <span>{b.cuts} cortes realizados</span>
+                  <span>{b.cuts === 0 ? '—' : `$${(b.revenue / b.cuts).toFixed(2)} por corte`}</span>
+                </div>
+              </li>
+            ))}
+          </ul>
         </div>
 
-        <div className="rounded-2xl border border-primary/15 bg-surface p-5">
-          <h3 className="mb-4 text-sm font-bold uppercase tracking-wider text-primary-light">
-            Próximas citas
-          </h3>
-          {appointments.length === 0 ? (
-            <p className="text-sm text-slate-400">No hay citas reservadas.</p>
-          ) : (
-            <ul className="flex max-h-56 flex-col gap-2 overflow-y-auto">
-              {[...appointments].reverse().map((a) => (
-                <li key={a.id} className="flex items-center justify-between gap-3 text-sm">
-                  <span className="truncate text-slate-300">
-                    {a.clientName} — <span className="text-white">{a.serviceName}</span>
-                  </span>
-                  <span className="shrink-0 font-bold text-primary-light">
-                    {new Date(a.date + 'T00:00:00').toLocaleDateString('es', {
-                      day: '2-digit',
-                      month: 'short',
-                    })}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
+        <div className="flex flex-col gap-5">
+          <div className="rounded-2xl border border-primary/15 bg-surface p-5">
+            <h3 className="mb-4 text-sm font-bold uppercase tracking-wider text-primary-light">
+              Productos más vendidos
+            </h3>
+            {bestSellers.length === 0 ? (
+              <p className="text-sm text-slate-400">Aún no hay ventas registradas.</p>
+            ) : (
+              <ul className="flex flex-col gap-2">
+                {bestSellers.map(([name, qty], i) => (
+                  <li key={name} className="flex items-center justify-between text-sm">
+                    <span className="text-slate-300">
+                      {i + 1}. {name}
+                    </span>
+                    <span className="font-bold text-gold">{qty} u.</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          <div className="rounded-2xl border border-primary/15 bg-surface p-5">
+            <h3 className="mb-4 text-sm font-bold uppercase tracking-wider text-primary-light">
+              Próximas citas
+            </h3>
+            {appointments.length === 0 ? (
+              <p className="text-sm text-slate-400">No hay citas reservadas.</p>
+            ) : (
+              <ul className="flex max-h-40 flex-col gap-2 overflow-y-auto">
+                {[...appointments].reverse().map((a) => (
+                  <li key={a.id} className="flex items-center justify-between gap-3 text-sm">
+                    <span className="truncate text-slate-300">
+                      {a.clientName} — <span className="text-white">{a.serviceName}</span>
+                      {a.barberName ? ` · ${a.barberName}` : ''}
+                    </span>
+                    <span className="shrink-0 font-bold text-primary-light">
+                      {new Date(a.date + 'T00:00:00').toLocaleDateString('es', {
+                        day: '2-digit',
+                        month: 'short',
+                      })}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
       </div>
 
@@ -441,6 +528,109 @@ function StatsTab() {
         Actividad reciente: {visits.filter((v) => v.type === 'visit').length} visitas registradas en el
         registro de actividad.
       </p>
+    </div>
+  )
+}
+
+function BarbersTab() {
+  const { barbers, addBarber, updateBarber, deleteBarber } = useData()
+  const [name, setName] = useState('')
+  const [editing, setEditing] = useState<string | null>(null)
+  const [editName, setEditName] = useState('')
+
+  const submit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    if (!name.trim()) return
+    await addBarber(name)
+    setName('')
+  }
+
+  return (
+    <div className="flex flex-col gap-5">
+      <form
+        onSubmit={submit}
+        className="grid gap-4 rounded-2xl border border-primary/15 bg-surface p-5 sm:grid-cols-[1fr_auto] sm:items-end"
+      >
+        <Field label="Nombre del barbero" value={name} onChange={setName} />
+        <button
+          type="submit"
+          className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary to-accent px-6 py-2.5 font-bold text-background"
+        >
+          <Plus size={16} />
+          Agregar
+        </button>
+      </form>
+
+      <p className="text-xs text-slate-500">
+        Los clientes eligen a su barbero al reservar una cita. El panel calcula los cortes e
+        ingresos de cada uno.
+      </p>
+
+      <ul className="flex flex-col gap-2">
+        {barbers.map((b) => (
+          <li key={b.id} className="rounded-xl border border-primary/15 bg-surface p-3">
+            {editing === b.id ? (
+              <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-center">
+                <input
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className={inputCls}
+                />
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      await updateBarber(b.id, editName)
+                      setEditing(null)
+                    }}
+                    className="grid h-10 w-10 place-items-center rounded-lg bg-gradient-to-r from-primary to-accent text-background"
+                    aria-label="Guardar"
+                  >
+                    <Save size={16} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditing(null)}
+                    className="grid h-10 w-10 place-items-center rounded-lg border border-primary/25 text-slate-300"
+                    aria-label="Cancelar"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <span className="grid h-10 w-10 place-items-center rounded-xl bg-primary/15 text-primary-light">
+                    <UserRound size={18} />
+                  </span>
+                  <p className="font-semibold text-white">{b.name}</p>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditing(b.id)
+                      setEditName(b.name)
+                    }}
+                    className="rounded-lg border border-primary/30 px-3 py-2 text-xs font-bold text-primary-light hover:bg-primary/10"
+                  >
+                    Editar nombre
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => deleteBarber(b.id)}
+                    className="grid h-8 w-8 place-items-center rounded-lg border border-red-400/30 text-red-400 hover:bg-red-400/10"
+                    aria-label="Eliminar"
+                  >
+                    <Trash2 size={15} />
+                  </button>
+                </div>
+              </div>
+            )}
+          </li>
+        ))}
+      </ul>
     </div>
   )
 }

@@ -22,6 +22,11 @@ export interface Promotion {
   image: string
 }
 
+export interface Barber {
+  id: string
+  name: string
+}
+
 export interface Client {
   id: string
   name: string
@@ -57,6 +62,8 @@ export interface Visit {
   serviceId?: string
   serviceName?: string
   price?: string
+  barberId?: string
+  barberName?: string
   date: string
 }
 
@@ -67,6 +74,8 @@ export interface Appointment {
   serviceId: string
   serviceName: string
   price: string
+  barberId?: string
+  barberName?: string
   date: string
   createdAt: string
 }

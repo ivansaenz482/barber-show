@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import { store } from '../lib/store'
 import type {
   Appointment,
+  Barber,
   Client,
   Order,
   Product,
@@ -60,6 +61,12 @@ const seedPromotions: Omit<Promotion, 'id'>[] = [
   },
 ]
 
+const seedBarbers: Omit<Barber, 'id'>[] = [
+  { name: 'Barbero 1' },
+  { name: 'Barbero 2' },
+  { name: 'Barbero 3' },
+]
+
 function getBirthdayToday(birthDate: string) {
   if (!birthDate) return false
   const now = new Date()
@@ -72,6 +79,7 @@ export default function DataProvider({ children }: { children: ReactNode }) {
   const [services, setServices] = useState<Service[]>([])
   const [products, setProducts] = useState<Product[]>([])
   const [promotions, setPromotions] = useState<Promotion[]>([])
+  const [barbers, setBarbers] = useState<Barber[]>([])
   const [clients, setClients] = useState<Client[]>([])
   const [orders, setOrders] = useState<Order[]>([])
   const [appointments, setAppointments] = useState<Appointment[]>([])
@@ -89,6 +97,7 @@ export default function DataProvider({ children }: { children: ReactNode }) {
       store.subscribe<Service>('services', setServices),
       store.subscribe<Product>('products', setProducts),
       store.subscribe<Promotion>('promotions', setPromotions),
+      store.subscribe<Barber>('barbers', setBarbers),
       store.subscribe<Client>('clients', setClients),
       store.subscribe<Order>('orders', setOrders),
       store.subscribe<Appointment>('appointments', setAppointments),
@@ -116,24 +125,58 @@ export default function DataProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let cancelled = false
     const seed = async () => {
-      if (services.length > 0 || products.length > 0 || promotions.length > 0) return
-      const meta = await store.getDoc('_meta', 'seed')
-      if (meta?.done) return
-      for (const s of seedServices) await store.add('services', s)
-      for (const p of seedProducts) await store.add('products', p)
-      for (const p of seedPromotions) await store.add('promotions', p)
-      await store.setDoc('_meta', 'seed', { done: true, at: new Date().toISOString() })
+      const meta = (await store.getDoc('_meta', 'seed')) ?? {}
+      const jobs: {
+        flag: string
+        items: Record<string, unknown>[]
+        empty: boolean
+        apply: () => void
+      }[] = [
+        {
+          flag: 'services',
+          items: seedServices,
+          empty: services.length === 0,
+          apply: () => setServices(seedServices as Service[]),
+        },
+        {
+          flag: 'products',
+          items: seedProducts,
+          empty: products.length === 0,
+          apply: () => setProducts(seedProducts as Product[]),
+        },
+        {
+          flag: 'promotions',
+          items: seedPromotions,
+          empty: promotions.length === 0,
+          apply: () => setPromotions(seedPromotions as Promotion[]),
+        },
+        {
+          flag: 'barbers',
+          items: seedBarbers,
+          empty: barbers.length === 0,
+          apply: () => setBarbers(seedBarbers as Barber[]),
+        },
+      ]
+      const pending = jobs.filter((j) => j.empty && !meta[j.flag])
+      for (const job of pending) {
+        for (const item of job.items) await store.add(job.flag, item)
+      }
+      if (pending.length > 0) {
+        await store.setDoc(
+          '_meta',
+          'seed',
+          Object.fromEntries(pending.map((j) => [j.flag, true])),
+        )
+      }
       if (!cancelled) {
-        setServices(seedServices as Service[])
-        setProducts(seedProducts as Product[])
-        setPromotions(seedPromotions as Promotion[])
+        pending.forEach((j) => j.apply())
       }
     }
     seed()
     return () => {
       cancelled = true
     }
-  }, [services.length, products.length, promotions.length])
+  }, [services.length, products.length, promotions.length, barbers.length])
 
   useEffect(() => {
     const id = localStorage.getItem(CLIENT_KEY)
@@ -200,9 +243,10 @@ export default function DataProvider({ children }: { children: ReactNode }) {
   }, [recordVisit])
 
   const bookHaircut = useCallback(
-    async (serviceId: string, date: string) => {
+    async (serviceId: string, date: string, barberId: string) => {
       if (!currentClient) return
       const service = services.find((s) => s.id === serviceId)
+      const barber = barbers.find((b) => b.id === barberId)
       if (!service) return
       await store.add('appointments', {
         clientId: currentClient.id,
@@ -210,6 +254,8 @@ export default function DataProvider({ children }: { children: ReactNode }) {
         serviceId: service.id,
         serviceName: service.name,
         price: service.price,
+        barberId: barber?.id ?? '',
+        barberName: barber?.name ?? '',
         date,
         createdAt: new Date().toISOString(),
       })
@@ -220,13 +266,15 @@ export default function DataProvider({ children }: { children: ReactNode }) {
         serviceId: service.id,
         serviceName: service.name,
         price: service.price,
+        barberId: barber?.id ?? '',
+        barberName: barber?.name ?? '',
         date: new Date().toISOString(),
       })
       await store.statsIncrement('main', 'haircuts')
       const s = await store.statsGet('main')
       setStats({ visits: Number(s.visits) || 0, haircuts: Number(s.haircuts) || 0 })
     },
-    [currentClient, services],
+    [currentClient, services, barbers],
   )
 
   const addToCart = useCallback((productId: string) => {
@@ -291,6 +339,7 @@ export default function DataProvider({ children }: { children: ReactNode }) {
     services,
     products,
     promotions,
+    barbers,
     clients,
     orders,
     appointments,
@@ -336,6 +385,15 @@ export default function DataProvider({ children }: { children: ReactNode }) {
     },
     deletePromotion: async (id) => {
       await store.remove('promotions', id)
+    },
+    addBarber: async (name) => {
+      await store.add('barbers', { name })
+    },
+    updateBarber: async (id, name) => {
+      await store.update('barbers', id, { name })
+    },
+    deleteBarber: async (id) => {
+      await store.remove('barbers', id)
     },
   }
 

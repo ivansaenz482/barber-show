@@ -1,6 +1,7 @@
 import { createContext, useContext } from 'react'
 import type {
   Appointment,
+  Barber,
   Client,
   Order,
   Product,
@@ -19,6 +20,7 @@ export interface DataContextValue {
   services: Service[]
   products: Product[]
   promotions: Promotion[]
+  barbers: Barber[]
   clients: Client[]
   orders: Order[]
   appointments: Appointment[]
@@ -38,7 +40,7 @@ export interface DataContextValue {
   logoutClient: () => void
   isBirthday: boolean
   recordVisit: () => void
-  bookHaircut: (serviceId: string, date: string) => Promise<void>
+  bookHaircut: (serviceId: string, date: string, barberId: string) => Promise<void>
   cart: Record<string, number>
   addToCart: (productId: string) => void
   removeFromCart: (productId: string) => void
@@ -55,6 +57,9 @@ export interface DataContextValue {
   deleteProduct: (id: string) => Promise<void>
   addPromotion: (promotion: Omit<Promotion, 'id'>) => Promise<void>
   deletePromotion: (id: string) => Promise<void>
+  addBarber: (name: string) => Promise<void>
+  updateBarber: (id: string, name: string) => Promise<void>
+  deleteBarber: (id: string) => Promise<void>
 }
 
 export const DataContext = createContext<DataContextValue | undefined>(undefined)

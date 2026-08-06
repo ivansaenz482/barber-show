@@ -5,8 +5,9 @@ import SectionHeader from './SectionHeader'
 import { useData } from '../context/data-context'
 
 export default function Booking() {
-  const { currentClient, services, bookHaircut, openRegister, appointments } = useData()
+  const { currentClient, services, barbers, bookHaircut, openRegister, appointments } = useData()
   const [serviceId, setServiceId] = useState('')
+  const [barberId, setBarberId] = useState('')
   const [date, setDate] = useState('')
   const [booked, setBooked] = useState<string | null>(null)
 
@@ -16,12 +17,13 @@ export default function Booking() {
 
   const submit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    if (!serviceId || !date) return
+    if (!serviceId || !barberId || !date) return
     const service = services.find((s) => s.id === serviceId)
-    await bookHaircut(serviceId, date)
+    await bookHaircut(serviceId, date, barberId)
     setBooked(service ? service.name : 'tu cita')
     setDate('')
     setServiceId('')
+    setBarberId('')
     setTimeout(() => setBooked(null), 5000)
   }
 
@@ -33,7 +35,7 @@ export default function Booking() {
       <SectionHeader
         eyebrow="Agenda"
         title="Reserva tu cita"
-        subtitle="Elige tu servicio y la fecha que prefieras. Confirmamos tu hora y te la recordamos."
+        subtitle="Elige tu barbero, tu servicio y la fecha que prefieras. Confirmamos tu hora y te la recordamos."
       />
 
       <div className="mx-auto grid max-w-4xl gap-8 lg:grid-cols-2">
@@ -47,10 +49,35 @@ export default function Booking() {
           {currentClient ? (
             <>
               <p className="mb-6 text-sm text-slate-300">
-                Hola <span className="font-bold text-white">{currentClient.name}</span>, selecciona
-                tu servicio y reserva tu hora.
+                Hola <span className="font-bold text-white">{currentClient.name}</span>, elige tu
+                barbero y reserva tu hora.
               </p>
               <form onSubmit={submit} className="flex flex-col gap-5">
+                <div>
+                  <label className="mb-2 block text-sm font-semibold text-slate-300">
+                    Elige tu barbero
+                  </label>
+                  <div className="grid grid-cols-3 gap-3">
+                    {barbers.map((b) => (
+                      <button
+                        key={b.id}
+                        type="button"
+                        onClick={() => setBarberId(b.id)}
+                        className={`rounded-xl border px-3 py-4 text-center transition-all ${
+                          barberId === b.id
+                            ? 'border-primary bg-primary/15 text-white'
+                            : 'border-primary/20 bg-surface text-slate-300 hover:border-primary/50'
+                        }`}
+                      >
+                        <Scissors
+                          size={20}
+                          className={`mx-auto mb-2 ${barberId === b.id ? 'text-primary-light' : 'text-slate-500'}`}
+                        />
+                        <span className="block text-sm font-bold">{b.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
                 <div>
                   <label className="mb-2 block text-sm font-semibold text-slate-300">Servicio</label>
                   <select
@@ -147,6 +174,9 @@ export default function Booking() {
                 >
                   <div className="min-w-0">
                     <p className="truncate font-semibold text-white">{a.serviceName}</p>
+                    <p className="text-xs text-slate-400">
+                      {a.barberName ? `Con ${a.barberName}` : 'Sin barbero asignado'}
+                    </p>
                     <p className="text-xs text-slate-400">${a.price}</p>
                   </div>
                   <div className="flex items-center gap-1.5 text-sm font-bold text-primary-light">
