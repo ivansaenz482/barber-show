@@ -1,15 +1,20 @@
 import { motion } from 'framer-motion'
 import { Check } from 'lucide-react'
 import SectionHeader from './SectionHeader'
+import { useData } from '../context/data-context'
+import type { Plan } from '../lib/types'
 
-const plans = [
+const defaultPlans: Plan[] = [
   {
+    id: 'clasico',
     name: 'Clásico',
     price: '$12',
     description: 'Corte esencial para mantener un look impecable.',
     features: ['Corte clásico a máquina y tijera', 'Lavado', 'Perfilado de contorno', 'Secado y peinado'],
+    featured: false,
   },
   {
+    id: 'premium',
     name: 'Premium',
     price: '$20',
     description: 'El ritual completo para los que cuidan cada detalle.',
@@ -23,14 +28,19 @@ const plans = [
     featured: true,
   },
   {
+    id: 'infantil',
     name: 'Infantil',
     price: '$8',
     description: 'Cortes cómodos y divertidos para los pequeños.',
     features: ['Corte infantil a máquina y tijera', 'Silla especial para niños', 'Lavado y secado', 'Te garantizamos que le encantará el corte'],
+    featured: false,
   },
 ]
 
 export default function Pricing() {
+  const { plans } = useData()
+  const visiblePlans = plans.length > 0 ? plans : defaultPlans
+
   return (
     <section id="precios" className="mx-auto max-w-7xl px-5 py-24 lg:px-8">
       <SectionHeader
@@ -40,9 +50,9 @@ export default function Pricing() {
       />
 
       <div className="grid gap-6 md:grid-cols-3">
-        {plans.map((plan, i) => (
+        {visiblePlans.map((plan, i) => (
           <motion.div
-            key={plan.name}
+            key={plan.id}
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-60px' }}

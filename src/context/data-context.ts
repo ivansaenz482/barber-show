@@ -4,6 +4,7 @@ import type {
   Barber,
   Client,
   Order,
+  Plan,
   Product,
   Promotion,
   Service,
@@ -20,6 +21,7 @@ export interface DataContextValue {
   services: Service[]
   products: Product[]
   promotions: Promotion[]
+  plans: Plan[]
   barbers: Barber[]
   clients: Client[]
   orders: Order[]
@@ -76,6 +78,9 @@ export interface DataContextValue {
   addPromotion: (promotion: Omit<Promotion, 'id'>) => Promise<void>
   updatePromotion: (id: string, promotion: Partial<Promotion>) => Promise<void>
   deletePromotion: (id: string) => Promise<void>
+  addPlan: (plan: Omit<Plan, 'id'>) => Promise<void>
+  updatePlan: (id: string, plan: Partial<Plan>) => Promise<void>
+  deletePlan: (id: string) => Promise<void>
   addBarber: (name: string) => Promise<void>
   updateBarber: (id: string, name: string) => Promise<void>
   deleteBarber: (id: string) => Promise<void>

@@ -1,6 +1,6 @@
 import { type FormEvent, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Clock, Mail, MapPin, MessageCircle, Phone, Send } from 'lucide-react'
+import { Clock, Mail, MapPin, MessageCircle, Navigation, Phone, Send } from 'lucide-react'
 import SectionHeader from './SectionHeader'
 import { useSettings } from '../context/settings-context'
 
@@ -159,6 +159,45 @@ export default function Contact() {
           )}
         </motion.form>
       </div>
+
+      {settings.mapEmbed && (
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-60px' }}
+          transition={{ duration: 0.6 }}
+          className="mt-10 overflow-hidden rounded-3xl border border-primary/15 bg-card"
+        >
+          <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
+            <div className="flex items-center gap-3">
+              <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-primary to-accent text-background">
+                <MapPin size={18} />
+              </span>
+              <div>
+                <h3 className="font-display font-bold text-white">Encuéntranos</h3>
+                <p className="text-sm text-slate-400">{settings.address}</p>
+              </div>
+            </div>
+            <a
+              href={settings.mapEmbed.replace('&output=embed', '').replace('?output=embed', '')}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 rounded-full border border-primary/40 px-5 py-2 text-sm font-bold text-primary-light transition-colors hover:bg-primary/10"
+            >
+              <Navigation size={15} />
+              Cómo llegar
+            </a>
+          </div>
+          <iframe
+            src={settings.mapEmbed}
+            title="Ubicación de Exclusive Barber Show"
+            className="h-[380px] w-full border-0"
+            loading="lazy"
+            allowFullScreen
+            referrerPolicy="no-referrer-when-downgrade"
+          />
+        </motion.div>
+      )}
     </section>
   )
 }

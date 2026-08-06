@@ -6,6 +6,7 @@ import type {
   Barber,
   Client,
   Order,
+  Plan,
   Product,
   Promotion,
   Service,
@@ -67,6 +68,46 @@ const seedBarbers: Omit<Barber, 'id'>[] = [
   { name: 'Barbero 3' },
 ]
 
+const seedPlans: Omit<Plan, 'id'>[] = [
+  {
+    name: 'Clásico',
+    price: '$12',
+    description: 'Corte esencial para mantener un look impecable.',
+    features: [
+      'Corte clásico a máquina y tijera',
+      'Lavado',
+      'Perfilado de contorno',
+      'Secado y peinado',
+    ],
+    featured: false,
+  },
+  {
+    name: 'Premium',
+    price: '$20',
+    description: 'El ritual completo para los que cuidan cada detalle.',
+    features: [
+      'Corte clásico o fade',
+      'Perfilado y arreglo de barba',
+      'Toalla caliente y afeitado de precisión',
+      'Lavado con productos premium',
+      'Peinado final con cera o pomada',
+    ],
+    featured: true,
+  },
+  {
+    name: 'Infantil',
+    price: '$8',
+    description: 'Cortes cómodos y divertidos para los pequeños.',
+    features: [
+      'Corte infantil a máquina y tijera',
+      'Silla especial para niños',
+      'Lavado y secado',
+      'Te garantizamos que le encantará el corte',
+    ],
+    featured: false,
+  },
+]
+
 function getBirthdayToday(birthDate: string) {
   if (!birthDate) return false
   const now = new Date()
@@ -79,6 +120,7 @@ export default function DataProvider({ children }: { children: ReactNode }) {
   const [services, setServices] = useState<Service[]>([])
   const [products, setProducts] = useState<Product[]>([])
   const [promotions, setPromotions] = useState<Promotion[]>([])
+  const [plans, setPlans] = useState<Plan[]>([])
   const [barbers, setBarbers] = useState<Barber[]>([])
   const [clients, setClients] = useState<Client[]>([])
   const [orders, setOrders] = useState<Order[]>([])
@@ -97,6 +139,7 @@ export default function DataProvider({ children }: { children: ReactNode }) {
       store.subscribe<Service>('services', setServices),
       store.subscribe<Product>('products', setProducts),
       store.subscribe<Promotion>('promotions', setPromotions),
+      store.subscribe<Plan>('plans', setPlans),
       store.subscribe<Barber>('barbers', setBarbers),
       store.subscribe<Client>('clients', setClients),
       store.subscribe<Order>('orders', setOrders),
@@ -156,6 +199,12 @@ export default function DataProvider({ children }: { children: ReactNode }) {
           empty: barbers.length === 0,
           apply: () => setBarbers(seedBarbers as Barber[]),
         },
+        {
+          flag: 'plans',
+          items: seedPlans,
+          empty: plans.length === 0,
+          apply: () => setPlans(seedPlans as Plan[]),
+        },
       ]
       const pending = jobs.filter((j) => j.empty && !meta[j.flag])
       for (const job of pending) {
@@ -176,7 +225,7 @@ export default function DataProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true
     }
-  }, [services.length, products.length, promotions.length, barbers.length])
+  }, [services.length, products.length, promotions.length, barbers.length, plans.length])
 
   useEffect(() => {
     const id = localStorage.getItem(CLIENT_KEY)
@@ -381,6 +430,7 @@ export default function DataProvider({ children }: { children: ReactNode }) {
     services,
     products,
     promotions,
+    plans,
     barbers,
     clients,
     orders,
@@ -433,6 +483,15 @@ export default function DataProvider({ children }: { children: ReactNode }) {
     },
     deletePromotion: async (id) => {
       await store.remove('promotions', id)
+    },
+    addPlan: async (plan) => {
+      await store.add('plans', plan)
+    },
+    updatePlan: async (id, plan) => {
+      await store.update('plans', id, plan)
+    },
+    deletePlan: async (id) => {
+      await store.remove('plans', id)
     },
     addBarber: async (name) => {
       await store.add('barbers', { name })

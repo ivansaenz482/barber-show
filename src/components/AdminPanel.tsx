@@ -4,12 +4,14 @@ import { AnimatePresence, motion } from 'framer-motion'
 import {
   BarChart3,
   Cake,
+  Check,
   ClipboardList,
   DollarSign,
   Eye,
   EyeOff,
   Gift,
   Image as ImageIcon,
+  Layers,
   Lock,
   Plus,
   QrCode,
@@ -32,7 +34,7 @@ import {
   type SiteSettings,
   type SocialLink,
 } from '../data/settings'
-import type { Client, Product, ProductCategory, Promotion } from '../lib/types'
+import type { Client, Plan, Product, ProductCategory, Promotion } from '../lib/types'
 import { socialIcon } from '../lib/social-icons'
 
 const inputCls =
@@ -180,6 +182,7 @@ const tabs = [
   { key: 'services', label: 'Servicios', icon: Scissors },
   { key: 'products', label: 'Productos', icon: ShoppingBag },
   { key: 'promotions', label: 'Promociones', icon: Gift },
+  { key: 'plans', label: 'Planes', icon: Layers },
   { key: 'clients', label: 'Clientes', icon: Users },
   { key: 'orders', label: 'Pedidos', icon: ClipboardList },
   { key: 'qr', label: 'QR de registro', icon: QrCode },
@@ -325,6 +328,7 @@ export default function AdminPanel() {
                   {tab === 'services' && <ServicesTab />}
                   {tab === 'products' && <ProductsTab />}
                   {tab === 'promotions' && <PromotionsTab />}
+                  {tab === 'plans' && <PlansTab />}
                   {tab === 'clients' && <ClientsTab />}
                   {tab === 'orders' && <OrdersTab />}
                   {tab === 'qr' && <QrTab />}
@@ -975,6 +979,164 @@ function PromotionsTab() {
   )
 }
 
+function PlansTab() {
+  const { plans, addPlan, updatePlan, deletePlan } = useData()
+  const empty: Omit<Plan, 'id'> = {
+    name: '',
+    price: '',
+    description: '',
+    features: [],
+    featured: false,
+  }
+  const [form, setForm] = useState<Omit<Plan, 'id'>>(empty)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [featuresText, setFeaturesText] = useState('')
+
+  const startEdit = (p: Plan) => {
+    setEditingId(p.id)
+    setForm({
+      name: p.name,
+      price: p.price,
+      description: p.description,
+      features: p.features,
+      featured: p.featured,
+    })
+    setFeaturesText(p.features.join('\n'))
+  }
+
+  const cancelEdit = () => {
+    setEditingId(null)
+    setForm(empty)
+    setFeaturesText('')
+  }
+
+  const submit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    if (!form.name.trim() || !form.price.trim()) return
+    const data = {
+      ...form,
+      features: featuresText
+        .split('\n')
+        .map((f) => f.trim())
+        .filter(Boolean),
+    }
+    if (editingId) {
+      await updatePlan(editingId, data)
+      cancelEdit()
+    } else {
+      await addPlan(data)
+      setForm(empty)
+      setFeaturesText('')
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-5">
+      <form onSubmit={submit} className="flex flex-col gap-4 rounded-2xl border border-primary/15 bg-surface p-5">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-bold uppercase tracking-wider text-primary-light">
+            {editingId ? 'Editar plan' : 'Agregar plan'}
+          </h3>
+          {editingId && (
+            <button
+              type="button"
+              onClick={cancelEdit}
+              className="rounded-lg border border-primary/30 px-3 py-1.5 text-xs font-bold text-primary-light hover:bg-primary/10"
+            >
+              Cancelar edición
+            </button>
+          )}
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Nombre del plan" value={form.name} onChange={(v) => setForm((f) => ({ ...f, name: v }))} />
+          <Field label="Precio (ej: $12)" value={form.price} onChange={(v) => setForm((f) => ({ ...f, price: v }))} />
+          <div className="sm:col-span-2">
+            <Field
+              label="Descripción"
+              value={form.description}
+              onChange={(v) => setForm((f) => ({ ...f, description: v }))}
+            />
+          </div>
+          <div className="sm:col-span-2">
+            <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-400">
+              Beneficios (uno por línea)
+            </label>
+            <textarea
+              value={featuresText}
+              onChange={(e) => setFeaturesText(e.target.value)}
+              rows={4}
+              placeholder={'Corte clásico a máquina y tijera\nLavado\nPerfilado de contorno'}
+              className={inputCls + ' resize-none'}
+            />
+          </div>
+          <label className="inline-flex cursor-pointer items-center gap-3 rounded-xl border border-primary/20 bg-surface px-4 py-3 text-sm text-slate-300 sm:col-span-2">
+            <input
+              type="checkbox"
+              checked={form.featured}
+              onChange={(e) => setForm((f) => ({ ...f, featured: e.target.checked }))}
+              className="h-5 w-5 accent-primary"
+            />
+            Marcar como plan destacado ("Más popular")
+          </label>
+        </div>
+        <button
+          type="submit"
+          className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary to-accent px-6 py-3 font-bold text-background"
+        >
+          <Save size={16} />
+          {editingId ? 'Guardar cambios' : 'Agregar plan'}
+        </button>
+      </form>
+
+      <ul className="grid gap-3 sm:grid-cols-2">
+        {plans.map((p) => (
+          <li key={p.id} className="rounded-xl border border-primary/15 bg-surface p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="font-semibold text-white">{p.name}</p>
+                  {p.featured && (
+                    <span className="rounded-full bg-gradient-to-r from-primary to-accent px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-background">
+                      Destacado
+                    </span>
+                  )}
+                </div>
+                <p className="mt-1 font-display text-xl font-extrabold text-gold">{p.price}</p>
+                <p className="mt-1 text-xs text-slate-400">{p.description}</p>
+              </div>
+              <div className="flex shrink-0 gap-2">
+                <button
+                  type="button"
+                  onClick={() => startEdit(p)}
+                  className="rounded-lg border border-primary/30 px-3 py-2 text-xs font-bold text-primary-light hover:bg-primary/10"
+                >
+                  Editar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => deletePlan(p.id)}
+                  className="grid h-8 w-8 place-items-center rounded-lg border border-red-400/30 text-red-400 hover:bg-red-400/10"
+                  aria-label="Eliminar"
+                >
+                  <Trash2 size={15} />
+                </button>
+              </div>
+            </div>
+            <ul className="mt-3 flex flex-col gap-1 border-t border-primary/10 pt-3">
+              {p.features.map((f) => (
+                <li key={f} className="flex items-start gap-2 text-xs text-slate-300">
+                  <Check size={12} className="mt-0.5 shrink-0 text-primary-light" />
+                  {f}
+                </li>
+              ))}
+            </ul>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
 function ClientsTab() {
   const { clients, updateClientById, deleteClient } = useData()
   const [editing, setEditing] = useState<string | null>(null)
@@ -1236,6 +1398,12 @@ function SettingsTab({
         <Field label="Correo electrónico" value={draft.email} onChange={(v) => setDraft((d) => ({ ...d, email: v }))} />
         <Field label="Dirección" value={draft.address} onChange={(v) => setDraft((d) => ({ ...d, address: v }))} />
         <Field label="WhatsApp (enlace wa.me)" value={draft.whatsapp} onChange={(v) => setDraft((d) => ({ ...d, whatsapp: v }))} />
+        <div className="sm:col-span-2">
+          <Field label="Google Maps (enlace del mapa)" value={draft.mapEmbed} onChange={(v) => setDraft((d) => ({ ...d, mapEmbed: v }))} />
+          <p className="mt-1.5 text-xs text-slate-500">
+            Cómo obtenerlo: en Google Maps busca tu barbería → Compartir → Insertar un mapa → copia el enlace del iframe (la parte después de src="..."). También sirve uno así: https://www.google.com/maps?q=Guayaquil%2C%20Ecuador&output=embed
+          </p>
+        </div>
       </div>
 
       <h3 className="mt-8 mb-3 text-sm font-bold uppercase tracking-wider text-primary-light">

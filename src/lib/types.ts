@@ -22,6 +22,15 @@ export interface Promotion {
   image: string
 }
 
+export interface Plan {
+  id: string
+  name: string
+  price: string
+  description: string
+  features: string[]
+  featured: boolean
+}
+
 export interface Barber {
   id: string
   name: string

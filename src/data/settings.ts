@@ -15,6 +15,7 @@ export interface SiteSettings {
   email: string
   address: string
   whatsapp: string
+  mapEmbed: string
   socials: SocialLink[]
   hours: HoursEntry[]
 }
@@ -27,6 +28,7 @@ export const defaultSettings: SiteSettings = {
   email: 'hola@exclusivebarbershow.com',
   address: 'Av. Principal 123, Centro',
   whatsapp: 'https://wa.me/15551234567',
+  mapEmbed: 'https://www.google.com/maps?q=Guayaquil%2C%20Ecuador&output=embed',
   socials: [
     { id: 'instagram', label: 'Instagram', url: 'https://instagram.com/exclusivebarber' },
     { id: 'facebook', label: 'Facebook', url: 'https://facebook.com/exclusivebarber' },
