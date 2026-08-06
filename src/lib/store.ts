@@ -135,9 +135,15 @@ export const store = {
   ): () => void {
     if (isCloudConnected()) {
       const ref = collection(firestore!, coll)
-      return onSnapshot(ref, (snap) => {
-        onChange(snap.docs.map((d) => ({ id: d.id, ...d.data() }) as unknown as T))
-      })
+      return onSnapshot(
+        ref,
+        (snap) => {
+          onChange(snap.docs.map((d) => ({ id: d.id, ...d.data() }) as unknown as T))
+        },
+        (err) => {
+          console.error(`[firestore] ${coll}:`, err)
+        },
+      )
     }
     const emit = () => onChange(lsRead(coll) as unknown as T[])
     emit()
