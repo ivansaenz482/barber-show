@@ -1,0 +1,35 @@
+name: Reporte diario
+
+# Se ejecuta todos los días a las 11:45 PM.
+# GitHub Actions usa UTC: 05:45 UTC equivale a 11:45 PM en Costa Rica (UTC-6).
+# Si estás en otro huso horario, ajusta la hora UTC (hora local + 6 horas).
+on:
+  schedule:
+    - cron: '45 5 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Instalar dependencias del reporte
+        run: npm install
+        working-directory: scripts
+
+      - name: Enviar reporte diario por correo
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          REPORT_EMAIL: ${{ secrets.REPORT_EMAIL }}
+        run: node daily-report.js
+        working-directory: scripts
