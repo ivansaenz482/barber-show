@@ -21,11 +21,11 @@ const PLACEHOLDER_IMAGE =
   'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"%3E%3Crect width="400" height="300" fill="%230a0a0a"/%3E%3Ctext x="200" y="150" fill="%23d4af37" font-size="22" text-anchor="middle" font-family="Arial"%3EAgrega tu foto%3C/text%3E%3C/svg%3E'
 
 const seedServices: Omit<Service, 'id'>[] = [
-  { name: 'Corte Clásico', price: '12' },
-  { name: 'Fade Moderno', price: '15' },
-  { name: 'Perfilado de Barba', price: '10' },
-  { name: 'Corte Infantil', price: '8' },
-  { name: 'Ritual Premium', price: '20' },
+  { name: 'Corte Clásico', price: '4.00' },
+  { name: 'Fade Moderno', price: '5.00' },
+  { name: 'Perfilado de Barba', price: '6' },
+  { name: 'Corte Infantil', price: '5' },
+  { name: 'Ritual Premium', price: '7' },
 ]
 
 const seedProducts: Omit<Product, 'id'>[] = [
