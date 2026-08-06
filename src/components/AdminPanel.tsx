@@ -185,6 +185,7 @@ const tabs = [
 
 export default function AdminPanel() {
   const { settings, updateSettings, resetSettings } = useSettings()
+  const { cloud } = useData()
   const [open, setOpen] = useState(false)
   const [authed, setAuthed] = useState(false)
   const [password, setPassword] = useState('')
@@ -245,6 +246,16 @@ export default function AdminPanel() {
                 <h2 className="font-display text-lg font-bold text-white">
                   Panel de Administración
                 </h2>
+                <span
+                  className={`ml-2 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wider ${
+                    cloud
+                      ? 'bg-primary/15 text-primary-light'
+                      : 'bg-gold/15 text-gold'
+                  }`}
+                >
+                  <span className={`h-1.5 w-1.5 rounded-full ${cloud ? 'bg-primary-light' : 'bg-gold'}`} />
+                  {cloud ? 'Conectado a Firebase' : 'Modo demo (local)'}
+                </span>
               </div>
               <button
                 type="button"
