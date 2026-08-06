@@ -51,6 +51,10 @@ export default function SettingsProvider({ children }: { children: ReactNode }) 
         }
       }
     })
+    store.getDoc('settings', 'main').then((doc) => {
+      if (cancelled || !doc) return
+      setSettings((prev) => ({ ...defaultSettings, ...prev, ...doc }))
+    })
     return () => {
       cancelled = true
     }
@@ -58,10 +62,16 @@ export default function SettingsProvider({ children }: { children: ReactNode }) 
 
   const updateSettings = useCallback((next: SiteSettings) => {
     setSettings(next)
+    if (store.isCloud()) {
+      store.setDoc('settings', 'main', { ...next })
+    }
   }, [])
 
   const resetSettings = useCallback(() => {
     setSettings(defaultSettings)
+    if (store.isCloud()) {
+      store.setDoc('settings', 'main', { ...defaultSettings })
+    }
   }, [])
 
   const changeAdminPassword = useCallback(async (password: string) => {
