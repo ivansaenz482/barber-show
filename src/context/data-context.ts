@@ -37,6 +37,13 @@ export interface DataContextValue {
     cedula: string
     birthDate: string
   }) => Promise<void>
+  updateClient: (data: {
+    name: string
+    phone: string
+    email: string
+    cedula: string
+    birthDate: string
+  }) => Promise<void>
   logoutClient: () => void
   isBirthday: boolean
   recordVisit: () => void
@@ -56,6 +63,7 @@ export interface DataContextValue {
   updateProduct: (id: string, product: Partial<Product>) => Promise<void>
   deleteProduct: (id: string) => Promise<void>
   addPromotion: (promotion: Omit<Promotion, 'id'>) => Promise<void>
+  updatePromotion: (id: string, promotion: Partial<Promotion>) => Promise<void>
   deletePromotion: (id: string) => Promise<void>
   addBarber: (name: string) => Promise<void>
   updateBarber: (id: string, name: string) => Promise<void>

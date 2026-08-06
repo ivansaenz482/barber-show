@@ -99,14 +99,15 @@ Tras el despliegue, el panel mostrará **"Conectado a Firebase"** y los datos qu
 
 La web incluye un **panel de administración** completo con pestañas:
 
-1. **Estadísticas** — visitas, cortes realizados, clientes, pedidos, productos más vendidos, próximas citas y cumpleañeros de hoy.
-2. **Servicios** — agregar, editar y eliminar servicios con precio (alimenta la sección de citas).
-3. **Productos** — agregar productos con foto (subida o URL), categoría (ropa/perfume/accesorio) y precio.
-4. **Promociones** — ofertas con foto y descripción.
-5. **Clientes** — registro de clientes con datos completos.
-6. **Pedidos** — pedidos de la tienda recibidos.
-7. **QR de registro** — código QR listo para imprimir y colocar en la barbería.
-8. **Ajustes** — celular, correo, dirección, WhatsApp, redes sociales y horarios.
+1. **Estadísticas** — visitas, cortes realizados, clientes, pedidos, **ingresos (cortes, tienda y total)**, **rendimiento por barbero**, productos más vendidos, próximas citas y cumpleañeros de hoy.
+2. **Barberos** — 3 barberos por defecto (Barbero 1, 2 y 3) con nombre editable. Solo el administrador puede agregar más.
+3. **Servicios** — agregar, editar y eliminar servicios con precio (alimenta la sección de citas).
+4. **Productos** — agregar, **editar** y eliminar productos con foto (subida o URL), categoría (ropa/perfume/accesorio) y precio.
+5. **Promociones** — ofertas con foto y descripción, también **editables**.
+6. **Clientes** — registro de clientes con datos completos. El cliente puede corregir sus propios datos desde "Mi cuenta".
+7. **Pedidos** — pedidos de la tienda recibidos.
+8. **QR de registro** — código QR listo para imprimir y colocar en la barbería.
+9. **Ajustes** — celular, correo, dirección, WhatsApp, redes sociales y horarios.
 
 Para entrar: haz clic en **"Administrar página"** (enlace pequeño en el footer) e ingresa la contraseña. Por defecto es: `exclusive123`
 
@@ -117,5 +118,6 @@ Notas:
 ## Notas
 
 - Las imágenes del carrusel y la galería son fotos de muestra de Unsplash (URLs públicas). Reemplázalas en `src/data/images.ts` por las fotos reales de tu barbería.
-- La paleta de colores se define en `src/index.css` dentro del bloque `@theme` (turquesa `#14b8a6`, fondo `#02120f`, acento dorado `#f0c26b`).
+- La paleta de colores se define en `src/index.css` dentro del bloque `@theme` (estilo barbería profesional: negro `#0a0a0a` con acentos dorados `#d4af37`).
 - El QR del panel usa el servicio gratuito `api.qrserver.com`; apunta a la URL de tu sitio.
+- El cliente elige con cuál de los 3 barberos quiere cortarse al reservar; el panel registra cortes e ingresos por barbero.

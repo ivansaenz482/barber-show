@@ -15,7 +15,7 @@ function BarberPole() {
         className="h-full w-full rounded-full bg-gradient-to-b from-primary via-white via-40% to-gold shadow-2xl shadow-primary/40"
         style={{
           backgroundImage: `repeating-linear-gradient(135deg,
-            #14b8a6 0px, #14b8a6 18px,
+            #d4af37 0px, #d4af37 18px,
             #f8fafc 18px, #f8fafc 36px,
             #f0c26b 36px, #f0c26b 54px,
             #f8fafc 54px, #f8fafc 72px)`,
@@ -42,7 +42,7 @@ export default function Hero() {
           alt="Barbería en movimiento"
           className="h-full w-full scale-105 object-cover opacity-40 animate-kenburns"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#02120f]/85 via-[#02120f]/70 to-[#02120f]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0a]/85 via-[#0a0a0a]/70 to-[#0a0a0a]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_20%,rgba(2,18,15,0.6)_100%)]" />
       </div>
       <div className="mx-auto grid w-full max-w-7xl items-center gap-12 px-5 py-16 lg:grid-cols-2 lg:px-8">

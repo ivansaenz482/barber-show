@@ -67,7 +67,7 @@ export default function Gallery() {
                 loading="lazy"
                 className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
               />
-              <div className="absolute inset-0 flex items-end bg-gradient-to-t from-[#02120f]/90 via-transparent to-transparent p-4 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+              <div className="absolute inset-0 flex items-end bg-gradient-to-t from-[#0a0a0a]/90 via-transparent to-transparent p-4 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
                 <div className="flex w-full items-center justify-between">
                   <p className="text-sm font-semibold text-white">{img.title}</p>
                   <Expand size={18} className="text-primary-light" />

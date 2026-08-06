@@ -218,6 +218,22 @@ export default function DataProvider({ children }: { children: ReactNode }) {
     setCurrentClient(null)
   }, [])
 
+  const updateClient = useCallback(
+    async (data: { name: string; phone: string; email: string; cedula: string; birthDate: string }) => {
+      if (!currentClient) return
+      const patch = {
+        name: data.name.trim(),
+        phone: data.phone.trim(),
+        email: data.email.trim(),
+        cedula: data.cedula.trim(),
+        birthDate: data.birthDate,
+      }
+      await store.update('clients', currentClient.id, patch)
+      setCurrentClient({ ...currentClient, ...patch })
+    },
+    [currentClient],
+  )
+
   const openRegister = useCallback((callback?: () => void) => {
     setRegisterCallback(callback)
     setRegisterModalOpen(true)
@@ -350,6 +366,7 @@ export default function DataProvider({ children }: { children: ReactNode }) {
     setRegisterModalOpen,
     openRegister,
     registerClient,
+    updateClient,
     logoutClient,
     isBirthday,
     recordVisit,
@@ -382,6 +399,9 @@ export default function DataProvider({ children }: { children: ReactNode }) {
     },
     addPromotion: async (promotion) => {
       await store.add('promotions', promotion)
+    },
+    updatePromotion: async (id, promotion) => {
+      await store.update('promotions', id, promotion)
     },
     deletePromotion: async (id) => {
       await store.remove('promotions', id)

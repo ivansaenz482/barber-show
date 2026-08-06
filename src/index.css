@@ -1,14 +1,14 @@
 @import 'tailwindcss';
 
 @theme {
-  --color-background: #02120f;
-  --color-surface: #05231d;
-  --color-card: #072d25;
-  --color-primary: #14b8a6;
-  --color-primary-light: #2dd4bf;
-  --color-primary-dark: #0d9488;
-  --color-accent: #22d3ee;
-  --color-gold: #f0c26b;
+  --color-background: #0a0a0a;
+  --color-surface: #161616;
+  --color-card: #111111;
+  --color-primary: #d4af37;
+  --color-primary-light: #e9c968;
+  --color-primary-dark: #a8862a;
+  --color-accent: #f0d078;
+  --color-gold: #f5d76e;
 
   --font-display: 'Montserrat', system-ui, sans-serif;
   --font-body: 'Inter', system-ui, sans-serif;
@@ -73,7 +73,7 @@ body {
 }
 
 ::selection {
-  background-color: rgba(20, 184, 166, 0.4);
+  background-color: rgba(212, 175, 55, 0.4);
   color: #ffffff;
 }
 
@@ -82,23 +82,23 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #02120f;
+  background: #0a0a0a;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #0d9488, #155e75);
+  background: linear-gradient(180deg, #a8862a, #d4af37);
   border-radius: 8px;
 }
 
 .text-gradient {
-  background: linear-gradient(90deg, #2dd4bf, #22d3ee, #67e8f9);
+  background: linear-gradient(90deg, #e9c968, #f0d078, #fff8dc);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 
 .text-gradient-animated {
-  background: linear-gradient(90deg, #2dd4bf, #22d3ee, #ffffff, #f0c26b, #2dd4bf);
+  background: linear-gradient(90deg, #e9c968, #fff8dc, #ffffff, #f5d76e, #e9c968);
   background-size: 300% auto;
   -webkit-background-clip: text;
   background-clip: text;
@@ -117,12 +117,12 @@ body {
 
 .text-glow {
   text-shadow:
-    0 0 24px rgba(34, 211, 238, 0.45),
-    0 0 64px rgba(20, 184, 166, 0.35);
+    0 0 24px rgba(240, 208, 120, 0.45),
+    0 0 64px rgba(212, 175, 55, 0.35);
 }
 
 .glass {
-  background: rgba(5, 35, 29, 0.55);
+  background: rgba(17, 17, 17, 0.6);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
 }

@@ -62,7 +62,7 @@ export default function Carousel() {
               loading="lazy"
               className="h-full w-full object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#02120f] via-[#02120f]/30 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/30 to-transparent" />
             <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-10">
               <motion.p
                 initial={{ opacity: 0, y: 16 }}

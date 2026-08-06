@@ -6,6 +6,7 @@ import {
   CheckCircle2,
   CreditCard,
   Mail,
+  Pencil,
   Phone,
   QrCode,
   User,
@@ -18,8 +19,15 @@ const inputCls =
   'w-full rounded-xl border border-primary/20 bg-surface px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:border-primary focus:outline-none'
 
 export default function ClientRegisterModal() {
-  const { registerModalOpen, setRegisterModalOpen, currentClient, registerClient, logoutClient, isBirthday } =
-    useData()
+  const {
+    registerModalOpen,
+    setRegisterModalOpen,
+    currentClient,
+    registerClient,
+    updateClient,
+    logoutClient,
+    isBirthday,
+  } = useData()
 
   const [form, setForm] = useState({
     name: '',
@@ -29,9 +37,24 @@ export default function ClientRegisterModal() {
     birthDate: '',
   })
   const [error, setError] = useState('')
+  const [editing, setEditing] = useState(false)
 
   const close = () => {
     setRegisterModalOpen(false)
+    setError('')
+    setEditing(false)
+  }
+
+  const startEdit = () => {
+    if (!currentClient) return
+    setForm({
+      name: currentClient.name,
+      phone: currentClient.phone,
+      email: currentClient.email,
+      cedula: currentClient.cedula,
+      birthDate: currentClient.birthDate,
+    })
+    setEditing(true)
     setError('')
   }
 
@@ -42,7 +65,12 @@ export default function ClientRegisterModal() {
       return
     }
     setError('')
-    await registerClient(form)
+    if (editing && currentClient) {
+      await updateClient(form)
+      setEditing(false)
+    } else {
+      await registerClient(form)
+    }
   }
 
   return (
@@ -64,12 +92,20 @@ export default function ClientRegisterModal() {
             <div className="flex items-center justify-between border-b border-primary/15 bg-surface px-6 py-4">
               <div className="flex items-center gap-2">
                 {currentClient ? (
-                  <UserCheck size={18} className="text-primary-light" />
+                  editing ? (
+                    <Pencil size={18} className="text-primary-light" />
+                  ) : (
+                    <UserCheck size={18} className="text-primary-light" />
+                  )
                 ) : (
                   <QrCode size={18} className="text-primary-light" />
                 )}
                 <h2 className="font-display text-lg font-bold text-white">
-                  {currentClient ? 'Mi cuenta Exclusive' : 'Registro de cliente'}
+                  {currentClient
+                    ? editing
+                      ? 'Editar mis datos'
+                      : 'Mi cuenta Exclusive'
+                    : 'Registro de cliente'}
                 </h2>
               </div>
               <button
@@ -82,7 +118,7 @@ export default function ClientRegisterModal() {
               </button>
             </div>
 
-            {currentClient ? (
+            {currentClient && !editing ? (
               <div className="px-6 py-8">
                 <div className="rounded-2xl border border-primary/20 bg-primary/10 p-5 text-center">
                   <p className="font-display text-lg font-bold text-white">{currentClient.name}</p>
@@ -109,29 +145,48 @@ export default function ClientRegisterModal() {
                       </span>
                     ) : (
                       <>
-                        Naciste el <span className="font-semibold text-white">{currentClient.birthDate}</span>.
-                        El día de tu cumpleaños el corte es <span className="font-semibold text-gold">GRATIS</span>.
+                        Naciste el{' '}
+                        <span className="font-semibold text-white">{currentClient.birthDate}</span>.
+                        El día de tu cumpleaños el corte es{' '}
+                        <span className="font-semibold text-gold">GRATIS</span>.
                       </>
                     )}
                   </p>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    logoutClient()
-                    close()
-                  }}
-                  className="mt-6 w-full rounded-full border border-primary/40 py-3 font-bold text-primary-light transition-colors hover:bg-primary/10"
-                >
-                  Cerrar sesión
-                </button>
+                <div className="mt-6 flex flex-col gap-3">
+                  <button
+                    type="button"
+                    onClick={startEdit}
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary to-accent py-3 font-bold text-background transition-transform hover:scale-[1.02]"
+                  >
+                    <Pencil size={16} />
+                    Editar mis datos
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      logoutClient()
+                      close()
+                    }}
+                    className="w-full rounded-full border border-primary/40 py-3 font-bold text-primary-light transition-colors hover:bg-primary/10"
+                  >
+                    Cerrar sesión
+                  </button>
+                </div>
               </div>
             ) : (
               <form onSubmit={submit} className="flex flex-col gap-4 px-6 py-6">
                 <p className="text-sm text-slate-300">
-                  Escaneaste el QR de <span className="font-bold text-primary-light">Exclusive Barber Show</span>.
-                  Regístrate en segundos para acceder a beneficios:
+                  {editing ? (
+                    <>Corrige los datos que necesites y pulsa guardar.</>
+                  ) : (
+                    <>
+                      Escaneaste el QR de{' '}
+                      <span className="font-bold text-primary-light">Exclusive Barber Show</span>.
+                      Regístrate en segundos para acceder a beneficios:
+                    </>
+                  )}
                 </p>
 
                 <div className="grid gap-4 sm:grid-cols-2">
@@ -222,13 +277,27 @@ export default function ClientRegisterModal() {
                   </p>
                 )}
 
-                <button
-                  type="submit"
-                  className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary to-accent py-3.5 font-bold text-background transition-transform hover:scale-[1.02]"
-                >
-                  <CheckCircle2 size={18} />
-                  Completar registro
-                </button>
+                <div className="mt-2 flex flex-col gap-3">
+                  <button
+                    type="submit"
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary to-accent py-3.5 font-bold text-background transition-transform hover:scale-[1.02]"
+                  >
+                    <CheckCircle2 size={18} />
+                    {editing ? 'Guardar cambios' : 'Completar registro'}
+                  </button>
+                  {editing && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditing(false)
+                        setError('')
+                      }}
+                      className="w-full rounded-full border border-primary/40 py-3 font-bold text-primary-light transition-colors hover:bg-primary/10"
+                    >
+                      Cancelar
+                    </button>
+                  )}
+                </div>
               </form>
             )}
           </motion.div>

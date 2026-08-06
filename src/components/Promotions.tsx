@@ -9,7 +9,7 @@ export default function Promotions() {
   const { promotions } = useData()
 
   return (
-    <section id="promociones" className="border-y border-primary/10 bg-[#010b09] py-24">
+    <section id="promociones" className="border-y border-primary/10 bg-[#060606] py-24">
       <div className="mx-auto max-w-7xl px-5 lg:px-8">
         <SectionHeader
           eyebrow="Ofertas"

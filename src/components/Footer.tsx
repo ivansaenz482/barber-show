@@ -5,7 +5,7 @@ export default function Footer() {
   const { settings } = useSettings()
 
   return (
-    <footer className="border-t border-primary/15 bg-[#010b09]">
+    <footer className="border-t border-primary/15 bg-[#060606]">
       <div className="mx-auto grid max-w-7xl gap-10 px-5 py-16 sm:grid-cols-2 lg:grid-cols-4 lg:px-8">
         <div className="sm:col-span-2 lg:col-span-1">
           <a href="#inicio" className="flex items-center gap-3">

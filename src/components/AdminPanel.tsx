@@ -731,7 +731,7 @@ function ServicesTab() {
 }
 
 function ProductsTab() {
-  const { products, addProduct, deleteProduct } = useData()
+  const { products, addProduct, updateProduct, deleteProduct } = useData()
   const empty: Omit<Product, 'id'> = {
     name: '',
     category: 'ropa',
@@ -740,20 +740,53 @@ function ProductsTab() {
     description: '',
   }
   const [form, setForm] = useState<Omit<Product, 'id'>>(empty)
+  const [editingId, setEditingId] = useState<string | null>(null)
+
+  const startEdit = (p: Product) => {
+    setEditingId(p.id)
+    setForm({
+      name: p.name,
+      category: p.category,
+      price: p.price,
+      image: p.image,
+      description: p.description,
+    })
+  }
+
+  const cancelEdit = () => {
+    setEditingId(null)
+    setForm(empty)
+  }
 
   const submit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!form.name.trim() || !form.price.trim()) return
-    await addProduct({ ...form, image: form.image || '' })
-    setForm(empty)
+    if (editingId) {
+      await updateProduct(editingId, { ...form, image: form.image || '' })
+      cancelEdit()
+    } else {
+      await addProduct({ ...form, image: form.image || '' })
+      setForm(empty)
+    }
   }
 
   return (
     <div className="flex flex-col gap-5">
       <form onSubmit={submit} className="flex flex-col gap-4 rounded-2xl border border-primary/15 bg-surface p-5">
-        <h3 className="text-sm font-bold uppercase tracking-wider text-primary-light">
-          Agregar producto
-        </h3>
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-bold uppercase tracking-wider text-primary-light">
+            {editingId ? 'Editar producto' : 'Agregar producto'}
+          </h3>
+          {editingId && (
+            <button
+              type="button"
+              onClick={cancelEdit}
+              className="rounded-lg border border-primary/30 px-3 py-1.5 text-xs font-bold text-primary-light hover:bg-primary/10"
+            >
+              Cancelar edición
+            </button>
+          )}
+        </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Nombre" value={form.name} onChange={(v) => setForm((f) => ({ ...f, name: v }))} />
           <div>
@@ -789,8 +822,8 @@ function ProductsTab() {
           type="submit"
           className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary to-accent px-6 py-3 font-bold text-background"
         >
-          <Plus size={16} />
-          Agregar producto
+          <Save size={16} />
+          {editingId ? 'Guardar cambios' : 'Agregar producto'}
         </button>
       </form>
 
@@ -807,14 +840,23 @@ function ProductsTab() {
               <p className="text-xs uppercase text-slate-400">{p.category}</p>
               <p className="text-sm font-bold text-gold">${p.price}</p>
             </div>
-            <button
-              type="button"
-              onClick={() => deleteProduct(p.id)}
-              className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-red-400/30 text-red-400 hover:bg-red-400/10"
-              aria-label="Eliminar"
-            >
-              <Trash2 size={15} />
-            </button>
+            <div className="flex shrink-0 gap-2">
+              <button
+                type="button"
+                onClick={() => startEdit(p)}
+                className="rounded-lg border border-primary/30 px-3 py-2 text-xs font-bold text-primary-light hover:bg-primary/10"
+              >
+                Editar
+              </button>
+              <button
+                type="button"
+                onClick={() => deleteProduct(p.id)}
+                className="grid h-8 w-8 place-items-center rounded-lg border border-red-400/30 text-red-400 hover:bg-red-400/10"
+                aria-label="Eliminar"
+              >
+                <Trash2 size={15} />
+              </button>
+            </div>
           </li>
         ))}
       </ul>
@@ -823,23 +865,51 @@ function ProductsTab() {
 }
 
 function PromotionsTab() {
-  const { promotions, addPromotion, deletePromotion } = useData()
+  const { promotions, addPromotion, updatePromotion, deletePromotion } = useData()
   const empty: Omit<Promotion, 'id'> = { title: '', description: '', image: '' }
   const [form, setForm] = useState<Omit<Promotion, 'id'>>(empty)
+  const [editingId, setEditingId] = useState<string | null>(null)
+
+  const startEdit = (p: Promotion) => {
+    setEditingId(p.id)
+    setForm({ title: p.title, description: p.description, image: p.image })
+  }
+
+  const cancelEdit = () => {
+    setEditingId(null)
+    setForm(empty)
+  }
 
   const submit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!form.title.trim()) return
-    await addPromotion({ ...form, description: form.description.trim(), image: form.image })
-    setForm(empty)
+    const data = { ...form, description: form.description.trim(), image: form.image }
+    if (editingId) {
+      await updatePromotion(editingId, data)
+      cancelEdit()
+    } else {
+      await addPromotion(data)
+      setForm(empty)
+    }
   }
 
   return (
     <div className="flex flex-col gap-5">
       <form onSubmit={submit} className="flex flex-col gap-4 rounded-2xl border border-primary/15 bg-surface p-5">
-        <h3 className="text-sm font-bold uppercase tracking-wider text-primary-light">
-          Agregar promoción
-        </h3>
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-bold uppercase tracking-wider text-primary-light">
+            {editingId ? 'Editar promoción' : 'Agregar promoción'}
+          </h3>
+          {editingId && (
+            <button
+              type="button"
+              onClick={cancelEdit}
+              className="rounded-lg border border-primary/30 px-3 py-1.5 text-xs font-bold text-primary-light hover:bg-primary/10"
+            >
+              Cancelar edición
+            </button>
+          )}
+        </div>
         <div className="grid gap-4">
           <Field label="Título" value={form.title} onChange={(v) => setForm((f) => ({ ...f, title: v }))} />
           <div>
@@ -859,8 +929,8 @@ function PromotionsTab() {
           type="submit"
           className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary to-accent px-6 py-3 font-bold text-background"
         >
-          <Plus size={16} />
-          Agregar promoción
+          <Save size={16} />
+          {editingId ? 'Guardar cambios' : 'Agregar promoción'}
         </button>
       </form>
 
@@ -878,14 +948,23 @@ function PromotionsTab() {
               <p className="truncate font-semibold text-white">{p.title}</p>
               <p className="line-clamp-2 text-xs text-slate-400">{p.description}</p>
             </div>
-            <button
-              type="button"
-              onClick={() => deletePromotion(p.id)}
-              className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-red-400/30 text-red-400 hover:bg-red-400/10"
-              aria-label="Eliminar"
-            >
-              <Trash2 size={15} />
-            </button>
+            <div className="flex shrink-0 gap-2">
+              <button
+                type="button"
+                onClick={() => startEdit(p)}
+                className="rounded-lg border border-primary/30 px-3 py-2 text-xs font-bold text-primary-light hover:bg-primary/10"
+              >
+                Editar
+              </button>
+              <button
+                type="button"
+                onClick={() => deletePromotion(p.id)}
+                className="grid h-8 w-8 place-items-center rounded-lg border border-red-400/30 text-red-400 hover:bg-red-400/10"
+                aria-label="Eliminar"
+              >
+                <Trash2 size={15} />
+              </button>
+            </div>
           </li>
         ))}
       </ul>
