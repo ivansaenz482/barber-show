@@ -18,7 +18,7 @@ const CART_KEY = 'exclusive_cart'
 const VISIT_KEY = 'exclusive_visit_counted'
 
 const PLACEHOLDER_IMAGE =
-  'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"%3E%3Crect width="400" height="300" fill="%23072d25"/%3E%3Ctext x="200" y="150" fill="%2314b8a6" font-size="22" text-anchor="middle" font-family="Arial"%3EAgrega tu foto%3C/text%3E%3C/svg%3E'
+  'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"%3E%3Crect width="400" height="300" fill="%230a0a0a"/%3E%3Ctext x="200" y="150" fill="%23d4af37" font-size="22" text-anchor="middle" font-family="Arial"%3EAgrega tu foto%3C/text%3E%3C/svg%3E'
 
 const seedServices: Omit<Service, 'id'>[] = [
   { name: 'Corte Clásico', price: '12' },
