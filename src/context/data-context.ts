@@ -44,6 +44,17 @@ export interface DataContextValue {
     cedula: string
     birthDate: string
   }) => Promise<void>
+  updateClientById: (
+    id: string,
+    data: {
+      name: string
+      phone: string
+      email: string
+      cedula: string
+      birthDate: string
+    },
+  ) => Promise<void>
+  deleteClient: (id: string) => Promise<void>
   logoutClient: () => void
   isBirthday: boolean
   recordVisit: () => void

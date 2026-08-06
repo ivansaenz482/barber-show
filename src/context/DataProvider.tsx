@@ -234,6 +234,32 @@ export default function DataProvider({ children }: { children: ReactNode }) {
     [currentClient],
   )
 
+  const updateClientById = useCallback(
+    async (
+      id: string,
+      data: { name: string; phone: string; email: string; cedula: string; birthDate: string },
+    ) => {
+      const patch = {
+        name: data.name.trim(),
+        phone: data.phone.trim(),
+        email: data.email.trim(),
+        cedula: data.cedula.trim(),
+        birthDate: data.birthDate,
+      }
+      await store.update('clients', id, patch)
+      if (currentClient?.id === id) setCurrentClient({ ...currentClient, ...patch })
+    },
+    [currentClient],
+  )
+
+  const deleteClient = useCallback(async (id: string) => {
+    await store.remove('clients', id)
+    if (currentClient?.id === id) {
+      localStorage.removeItem(CLIENT_KEY)
+      setCurrentClient(null)
+    }
+  }, [currentClient])
+
   const openRegister = useCallback((callback?: () => void) => {
     setRegisterCallback(callback)
     setRegisterModalOpen(true)
@@ -367,6 +393,8 @@ export default function DataProvider({ children }: { children: ReactNode }) {
     openRegister,
     registerClient,
     updateClient,
+    updateClientById,
+    deleteClient,
     logoutClient,
     isBirthday,
     recordVisit,

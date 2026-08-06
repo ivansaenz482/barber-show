@@ -5,6 +5,8 @@ export interface SettingsContextValue {
   settings: SiteSettings
   updateSettings: (next: SiteSettings) => void
   resetSettings: () => void
+  adminPassword: string
+  changeAdminPassword: (password: string) => Promise<void>
 }
 
 export const SettingsContext = createContext<SettingsContextValue | undefined>(undefined)

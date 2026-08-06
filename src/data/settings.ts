@@ -20,6 +20,7 @@ export interface SiteSettings {
 }
 
 export const ADMIN_PASSWORD = 'exclusive123'
+export const ADMIN_PASSWORD_KEY = 'exclusive-admin-password'
 
 export const defaultSettings: SiteSettings = {
   phone: '+1 555 123 4567',

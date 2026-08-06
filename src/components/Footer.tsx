@@ -1,5 +1,6 @@
-import { Globe, Scissors, Settings } from 'lucide-react'
+import { Scissors, Settings } from 'lucide-react'
 import { useSettings } from '../context/settings-context'
+import { socialIcon } from '../lib/social-icons'
 
 export default function Footer() {
   const { settings } = useSettings()
@@ -26,19 +27,22 @@ export default function Footer() {
             imagen es nuestra pasión.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
-            {settings.socials.map((s) => (
-              <a
-                key={s.id}
-                href={s.url}
-                target="_blank"
-                rel="noreferrer"
-                aria-label={s.label}
-                title={s.label}
-                className="grid h-10 w-10 place-items-center rounded-full border border-primary/20 text-primary-light transition-colors hover:bg-primary hover:text-background"
-              >
-                <Globe size={18} />
-              </a>
-            ))}
+            {settings.socials.map((s) => {
+              const Icon = socialIcon(s)
+              return (
+                <a
+                  key={s.id}
+                  href={s.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label={s.label}
+                  title={s.label}
+                  className="grid h-10 w-10 place-items-center rounded-full border border-primary/20 text-primary-light transition-colors hover:bg-primary hover:text-background"
+                >
+                  <Icon size={18} />
+                </a>
+              )
+            })}
           </div>
         </div>
 

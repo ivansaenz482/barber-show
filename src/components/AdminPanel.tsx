@@ -27,13 +27,13 @@ import {
 import { useSettings } from '../context/settings-context'
 import { useData } from '../context/data-context'
 import {
-  ADMIN_PASSWORD,
   defaultSettings,
   type HoursEntry,
   type SiteSettings,
   type SocialLink,
 } from '../data/settings'
-import type { Product, ProductCategory, Promotion } from '../lib/types'
+import type { Client, Product, ProductCategory, Promotion } from '../lib/types'
+import { socialIcon } from '../lib/social-icons'
 
 const inputCls =
   'w-full rounded-xl border border-primary/20 bg-surface px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:border-primary focus:outline-none'
@@ -187,7 +187,8 @@ const tabs = [
 ]
 
 export default function AdminPanel() {
-  const { settings, updateSettings, resetSettings } = useSettings()
+  const { settings, updateSettings, resetSettings, adminPassword, changeAdminPassword } =
+    useSettings()
   const { cloud } = useData()
   const [open, setOpen] = useState(false)
   const [authed, setAuthed] = useState(false)
@@ -219,7 +220,7 @@ export default function AdminPanel() {
   }
 
   const login = () => {
-    if (password === ADMIN_PASSWORD) {
+    if (password === adminPassword) {
       setAuthed(true)
       setError(false)
     } else {
@@ -310,7 +311,7 @@ export default function AdminPanel() {
                     Entrar
                   </button>
                   <p className="mt-4 text-center text-xs text-slate-500">
-                    Contraseña por defecto: exclusive123 (cámbiala en src/data/settings.ts)
+                    Contraseña por defecto: exclusive123 (cámbiala en el panel → Ajustes → Seguridad)
                   </p>
                 </div>
               </div>
@@ -332,6 +333,8 @@ export default function AdminPanel() {
                       settings={settings}
                       updateSettings={updateSettings}
                       resetSettings={resetSettings}
+                      adminPassword={adminPassword}
+                      changeAdminPassword={changeAdminPassword}
                     />
                   )}
                 </div>
@@ -973,7 +976,29 @@ function PromotionsTab() {
 }
 
 function ClientsTab() {
-  const { clients } = useData()
+  const { clients, updateClientById, deleteClient } = useData()
+  const [editing, setEditing] = useState<string | null>(null)
+  const [form, setForm] = useState({
+    name: '',
+    phone: '',
+    email: '',
+    cedula: '',
+    birthDate: '',
+  })
+
+  const startEdit = (c: Client) => {
+    setEditing(c.id)
+    setForm({
+      name: c.name,
+      phone: c.phone,
+      email: c.email || '',
+      cedula: c.cedula || '',
+      birthDate: c.birthDate || '',
+    })
+  }
+
+  const cancelEdit = () => setEditing(null)
+
   return (
     <div className="flex flex-col gap-3">
       {clients.length === 0 ? (
@@ -984,26 +1009,79 @@ function ClientsTab() {
         <ul className="flex max-h-[50vh] flex-col gap-2 overflow-y-auto">
           {clients.map((c) => (
             <li key={c.id} className="rounded-xl border border-primary/15 bg-surface p-4">
-              <div className="flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="font-semibold text-white">{c.name}</p>
-                  <p className="text-sm text-slate-400">{c.phone}</p>
+              {editing === c.id ? (
+                <div className="flex flex-col gap-3">
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <Field label="Nombre" value={form.name} onChange={(v) => setForm((f) => ({ ...f, name: v }))} />
+                    <Field label="Celular" value={form.phone} onChange={(v) => setForm((f) => ({ ...f, phone: v }))} />
+                    <Field label="Gmail" value={form.email} onChange={(v) => setForm((f) => ({ ...f, email: v }))} />
+                    <Field label="Cédula" value={form.cedula} onChange={(v) => setForm((f) => ({ ...f, cedula: v }))} />
+                    <Field label="Fecha de nacimiento" value={form.birthDate} onChange={(v) => setForm((f) => ({ ...f, birthDate: v }))} type="date" />
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        if (!form.name.trim() || !form.phone.trim()) return
+                        await updateClientById(c.id, form)
+                        setEditing(null)
+                      }}
+                      className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary to-accent px-5 py-2 text-sm font-bold text-background"
+                    >
+                      <Save size={15} />
+                      Guardar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={cancelEdit}
+                      className="rounded-full border border-primary/30 px-5 py-2 text-sm font-bold text-slate-300"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
                 </div>
-                <span className="text-xs text-slate-500">
-                  Registrado: {new Date(c.createdAt).toLocaleDateString('es')}
-                </span>
-              </div>
-              <div className="mt-2 grid gap-1 text-xs text-slate-400 sm:grid-cols-3">
-                <p>
-                  <span className="font-semibold text-slate-300">Cédula:</span> {c.cedula}
-                </p>
-                <p>
-                  <span className="font-semibold text-slate-300">Cumpleaños:</span> {c.birthDate}
-                </p>
-                <p>
-                  <span className="font-semibold text-slate-300">Gmail:</span> {c.email || '—'}
-                </p>
-              </div>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="font-semibold text-white">{c.name}</p>
+                      <p className="text-sm text-slate-400">{c.phone}</p>
+                    </div>
+                    <div className="flex shrink-0 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => startEdit(c)}
+                        className="rounded-lg border border-primary/30 px-3 py-2 text-xs font-bold text-primary-light hover:bg-primary/10"
+                      >
+                        Editar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (window.confirm(`¿Eliminar a ${c.name}? Esta acción no se puede deshacer.`)) {
+                            deleteClient(c.id)
+                          }
+                        }}
+                        className="grid h-8 w-8 place-items-center rounded-lg border border-red-400/30 text-red-400 hover:bg-red-400/10"
+                        aria-label="Eliminar"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
+                  </div>
+                  <div className="mt-2 grid gap-1 text-xs text-slate-400 sm:grid-cols-3">
+                    <p>
+                      <span className="font-semibold text-slate-300">Cédula:</span> {c.cedula || '—'}
+                    </p>
+                    <p>
+                      <span className="font-semibold text-slate-300">Cumpleaños:</span> {c.birthDate || '—'}
+                    </p>
+                    <p>
+                      <span className="font-semibold text-slate-300">Gmail:</span> {c.email || '—'}
+                    </p>
+                  </div>
+                </>
+              )}
             </li>
           ))}
         </ul>
@@ -1087,13 +1165,23 @@ function SettingsTab({
   settings,
   updateSettings,
   resetSettings,
+  adminPassword,
+  changeAdminPassword,
 }: {
   settings: SiteSettings
   updateSettings: (next: SiteSettings) => void
   resetSettings: () => void
+  adminPassword: string
+  changeAdminPassword: (password: string) => Promise<void>
 }) {
   const [draft, setDraft] = useState<SiteSettings>(settings)
   const [saved, setSaved] = useState(false)
+  const [currentPass, setCurrentPass] = useState('')
+  const [newPass, setNewPass] = useState('')
+  const [confirmPass, setConfirmPass] = useState('')
+  const [passError, setPassError] = useState('')
+  const [passSaved, setPassSaved] = useState(false)
+  const [showPassFields, setShowPassFields] = useState(false)
 
   useEffect(() => {
     setDraft(settings)
@@ -1154,30 +1242,36 @@ function SettingsTab({
         Redes sociales
       </h3>
       <div className="flex flex-col gap-3">
-        {draft.socials.map((s) => (
-          <div key={s.id} className="grid gap-3 rounded-xl border border-primary/15 bg-surface p-3 sm:grid-cols-[1fr_2fr_auto]">
-            <input
-              value={s.label}
-              onChange={(e) => setSocial(s.id, { label: e.target.value })}
-              placeholder="Nombre (ej: Instagram)"
-              className={inputCls}
-            />
-            <input
-              value={s.url}
-              onChange={(e) => setSocial(s.id, { url: e.target.value })}
-              placeholder="https://..."
-              className={inputCls}
-            />
-            <button
-              type="button"
-              onClick={() => removeSocial(s.id)}
-              aria-label="Eliminar red"
-              className="grid h-10 w-10 place-items-center rounded-lg border border-red-400/30 text-red-400 transition-colors hover:bg-red-400/10"
-            >
-              <Trash2 size={16} />
-            </button>
-          </div>
-        ))}
+        {draft.socials.map((s) => {
+          const Icon = socialIcon(s)
+          return (
+            <div key={s.id} className="grid gap-3 rounded-xl border border-primary/15 bg-surface p-3 sm:grid-cols-[auto_1fr_2fr_auto] sm:items-center">
+              <span className="grid h-10 w-10 place-items-center rounded-lg bg-primary/15 text-primary-light">
+                <Icon size={18} />
+              </span>
+              <input
+                value={s.label}
+                onChange={(e) => setSocial(s.id, { label: e.target.value })}
+                placeholder="Nombre (ej: Instagram)"
+                className={inputCls}
+              />
+              <input
+                value={s.url}
+                onChange={(e) => setSocial(s.id, { url: e.target.value })}
+                placeholder="https://..."
+                className={inputCls}
+              />
+              <button
+                type="button"
+                onClick={() => removeSocial(s.id)}
+                aria-label="Eliminar red"
+                className="grid h-10 w-10 place-items-center rounded-lg border border-red-400/30 text-red-400 transition-colors hover:bg-red-400/10"
+              >
+                <Trash2 size={16} />
+              </button>
+            </div>
+          )
+        })}
         <button
           type="button"
           onClick={addSocial}
@@ -1224,6 +1318,87 @@ function SettingsTab({
           <Plus size={16} />
           Agregar horario
         </button>
+      </div>
+
+      <div className="mt-8 rounded-2xl border border-primary/15 bg-surface p-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h3 className="text-sm font-bold uppercase tracking-wider text-primary-light">
+              Seguridad
+            </h3>
+            <p className="mt-1 text-xs text-slate-400">
+              Cambia la contraseña de acceso al panel de administración.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setShowPassFields((v) => !v)
+              setPassError('')
+            }}
+            className="inline-flex items-center gap-2 rounded-full border border-primary/40 px-4 py-2 text-xs font-bold text-primary-light transition-colors hover:bg-primary/10"
+          >
+            <Lock size={14} />
+            {showPassFields ? 'Cancelar' : 'Cambiar contraseña'}
+          </button>
+        </div>
+
+        {showPassFields && (
+          <div className="mt-4 grid gap-4 sm:grid-cols-3">
+            <Field
+              label="Contraseña actual"
+              value={currentPass}
+              onChange={setCurrentPass}
+              type="password"
+            />
+            <Field label="Nueva contraseña" value={newPass} onChange={setNewPass} type="password" />
+            <Field
+              label="Repetir nueva contraseña"
+              value={confirmPass}
+              onChange={setConfirmPass}
+              type="password"
+            />
+            <div className="sm:col-span-3">
+              {passError && (
+                <p className="mb-2 text-xs font-semibold text-red-400">{passError}</p>
+              )}
+              {passSaved && (
+                <p className="mb-2 text-xs font-semibold text-primary-light">
+                  Contraseña actualizada correctamente.
+                </p>
+              )}
+              <button
+                type="button"
+                onClick={async () => {
+                  setPassError('')
+                  setPassSaved(false)
+                  if (currentPass !== adminPassword) {
+                    setPassError('La contraseña actual no es correcta.')
+                    return
+                  }
+                  if (newPass.length < 6) {
+                    setPassError('La nueva contraseña debe tener al menos 6 caracteres.')
+                    return
+                  }
+                  if (newPass !== confirmPass) {
+                    setPassError('Las contraseñas nuevas no coinciden.')
+                    return
+                  }
+                  await changeAdminPassword(newPass)
+                  setCurrentPass('')
+                  setNewPass('')
+                  setConfirmPass('')
+                  setPassSaved(true)
+                  setTimeout(() => setShowPassFields(false), 1200)
+                }}
+                className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary to-accent px-6 py-2.5 text-sm font-bold text-background"
+              >
+                <Save size={16} />
+                Guardar contraseña
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="mt-8 flex flex-wrap gap-3">
