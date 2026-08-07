@@ -34,7 +34,7 @@ export default function Contact() {
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true, margin: '-60px' }}
           transition={{ duration: 0.6 }}
-          className="flex flex-col gap-6 lg:col-span-2"
+          className="flex min-w-0 flex-col gap-6 lg:col-span-2"
         >
           {contactInfo.map((info) => (
             <div
@@ -75,7 +75,7 @@ export default function Contact() {
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true, margin: '-60px' }}
           transition={{ duration: 0.6 }}
-          className="rounded-3xl border border-primary/15 bg-card p-8 lg:col-span-3"
+          className="min-w-0 rounded-3xl border border-primary/15 bg-card p-8 lg:col-span-3"
         >
           <div className="grid gap-5 sm:grid-cols-2">
             <div>
