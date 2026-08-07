@@ -13,6 +13,7 @@ import Store from './components/Store'
 import Testimonials from './components/Testimonials'
 import Contact from './components/Contact'
 import Footer from './components/Footer'
+import FloatingWhatsApp from './components/FloatingWhatsApp'
 import AdminPanel from './components/AdminPanel'
 import ClientRegisterModal from './components/ClientRegisterModal'
 import SettingsProvider from './context/SettingsProvider'
@@ -39,6 +40,7 @@ function App() {
           <Contact />
         </main>
         <Footer />
+        <FloatingWhatsApp />
         <AdminPanel />
         <ClientRegisterModal />
       </DataProvider>
