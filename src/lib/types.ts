@@ -1,5 +1,15 @@
 export type ProductCategory = 'ropa' | 'perfume' | 'accesorio'
 
+export type Category = 'barberia' | 'cortes' | 'adultos' | 'jovenes'
+
+export interface GalleryImage {
+  id: string
+  src: string
+  title: string
+  category: Category
+  order?: number
+}
+
 export interface Service {
   id: string
   name: string

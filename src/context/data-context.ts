@@ -3,6 +3,7 @@ import type {
   Appointment,
   Barber,
   Client,
+  GalleryImage,
   Order,
   Plan,
   Product,
@@ -27,6 +28,7 @@ export interface DataContextValue {
   orders: Order[]
   appointments: Appointment[]
   visits: Visit[]
+  gallery: GalleryImage[]
   stats: Stats
   currentClient: Client | null
   registerModalOpen: boolean
@@ -84,6 +86,9 @@ export interface DataContextValue {
   addBarber: (name: string) => Promise<void>
   updateBarber: (id: string, name: string) => Promise<void>
   deleteBarber: (id: string) => Promise<void>
+  addGalleryImage: (image: Omit<GalleryImage, 'id'>) => Promise<void>
+  updateGalleryImage: (id: string, image: Partial<GalleryImage>) => Promise<void>
+  deleteGalleryImage: (id: string) => Promise<void>
 }
 
 export const DataContext = createContext<DataContextValue | undefined>(undefined)

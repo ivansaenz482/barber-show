@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Expand, X } from 'lucide-react'
-import { galleryImages, type Category } from '../data/images'
+import type { Category } from '../lib/types'
+import { useData } from '../context/data-context'
 import SectionHeader from './SectionHeader'
 
 const filters: { value: Category | 'todos'; label: string }[] = [
@@ -13,15 +14,16 @@ const filters: { value: Category | 'todos'; label: string }[] = [
 ]
 
 export default function Gallery() {
+  const { gallery: images } = useData()
   const [active, setActive] = useState<Category | 'todos'>('todos')
   const [lightbox, setLightbox] = useState<string | null>(null)
 
-  const images = useMemo(
-    () => (active === 'todos' ? galleryImages : galleryImages.filter((g) => g.category === active)),
-    [active],
+  const filtered = useMemo(
+    () => (active === 'todos' ? images : images.filter((g) => g.category === active)),
+    [active, images],
   )
 
-  const current = galleryImages.find((g) => g.id === lightbox)
+  const current = images.find((g) => g.id === lightbox)
 
   return (
     <section id="galeria" className="mx-auto max-w-7xl px-5 py-24 lg:px-8">
@@ -50,7 +52,7 @@ export default function Gallery() {
 
       <motion.div layout className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
         <AnimatePresence mode="popLayout">
-          {images.map((img) => (
+          {filtered.map((img) => (
             <motion.div
               key={img.id}
               layout

@@ -34,8 +34,38 @@ import {
   type SiteSettings,
   type SocialLink,
 } from '../data/settings'
-import type { Client, Plan, Product, ProductCategory, Promotion } from '../lib/types'
+import type { Category, Client, GalleryImage, Plan, Product, ProductCategory, Promotion } from '../lib/types'
 import { socialIcon } from '../lib/social-icons'
+
+function compressImage(file: File): Promise<string> {
+  return new Promise((resolve) => {
+    const reader = new FileReader()
+    reader.onerror = () => resolve('')
+    reader.onload = () => {
+      const original = String(reader.result)
+      const img = new Image()
+      img.onerror = () => resolve(original)
+      img.onload = () => {
+        const MAX = 1280
+        const scale = Math.min(1, MAX / Math.max(img.width, img.height))
+        if (scale === 1) return resolve(original)
+        const canvas = document.createElement('canvas')
+        canvas.width = Math.round(img.width * scale)
+        canvas.height = Math.round(img.height * scale)
+        const ctx = canvas.getContext('2d')
+        if (!ctx) return resolve(original)
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+        try {
+          resolve(canvas.toDataURL('image/jpeg', 0.85))
+        } catch {
+          resolve(original)
+        }
+      }
+      img.src = original
+    }
+    reader.readAsDataURL(file)
+  })
+}
 
 const inputCls =
   'w-full rounded-xl border border-primary/20 bg-surface px-4 py-2.5 text-sm text-white placeholder:text-slate-500 focus:border-primary focus:outline-none'
@@ -129,10 +159,8 @@ function ImageInput({
   value: string
   onChange: (v: string) => void
 }) {
-  const readFile = (file: File) => {
-    const reader = new FileReader()
-    reader.onload = () => onChange(String(reader.result))
-    reader.readAsDataURL(file)
+  const readFile = async (file: File) => {
+    onChange(await compressImage(file))
   }
 
   return (
@@ -183,6 +211,7 @@ const tabs = [
   { key: 'products', label: 'Productos', icon: ShoppingBag },
   { key: 'promotions', label: 'Promociones', icon: Gift },
   { key: 'plans', label: 'Planes', icon: Layers },
+  { key: 'gallery', label: 'Galería', icon: ImageIcon },
   { key: 'clients', label: 'Clientes', icon: Users },
   { key: 'orders', label: 'Pedidos', icon: ClipboardList },
   { key: 'qr', label: 'QR de registro', icon: QrCode },
@@ -329,6 +358,7 @@ export default function AdminPanel() {
                   {tab === 'products' && <ProductsTab />}
                   {tab === 'promotions' && <PromotionsTab />}
                   {tab === 'plans' && <PlansTab />}
+                  {tab === 'gallery' && <GalleryTab />}
                   {tab === 'clients' && <ClientsTab />}
                   {tab === 'orders' && <OrdersTab />}
                   {tab === 'qr' && <QrTab />}
@@ -974,6 +1004,134 @@ function PromotionsTab() {
             </div>
           </li>
         ))}
+      </ul>
+    </div>
+  )
+}
+
+function GalleryTab() {
+  const { gallery, addGalleryImage, updateGalleryImage, deleteGalleryImage } = useData()
+  const [title, setTitle] = useState('')
+  const [category, setCategory] = useState<Category>('cortes')
+  const [image, setImage] = useState('')
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+
+  const startEdit = (g: GalleryImage) => {
+    setEditingId(g.id)
+    setTitle(g.title)
+    setCategory(g.category)
+    setImage(g.src)
+  }
+
+  const cancelEdit = () => {
+    setEditingId(null)
+    setTitle('')
+    setCategory('cortes')
+    setImage('')
+  }
+
+  const submit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    if (!image || !title.trim()) return
+    setBusy(true)
+    try {
+      const data = { title: title.trim(), category, src: image }
+      if (editingId) await updateGalleryImage(editingId, data)
+      else await addGalleryImage(data)
+      cancelEdit()
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-5">
+      <form onSubmit={submit} className="flex flex-col gap-4 rounded-2xl border border-primary/15 bg-surface p-5">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-bold uppercase tracking-wider text-primary-light">
+            {editingId ? 'Editar foto' : 'Agregar foto'}
+          </h3>
+          {editingId && (
+            <button
+              type="button"
+              onClick={cancelEdit}
+              className="rounded-lg border border-primary/30 px-3 py-1.5 text-xs font-bold text-primary-light hover:bg-primary/10"
+            >
+              Cancelar edición
+            </button>
+          )}
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Título" value={title} onChange={setTitle} />
+          <div>
+            <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-400">
+              Categoría
+            </label>
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value as Category)}
+              className={inputCls}
+            >
+              <option value="barberia">La Barbería</option>
+              <option value="cortes">Cortes</option>
+              <option value="adultos">Adultos</option>
+              <option value="jovenes">Jóvenes</option>
+            </select>
+          </div>
+          <div className="sm:col-span-2">
+            <ImageInput value={image} onChange={setImage} />
+          </div>
+        </div>
+        <button
+          type="submit"
+          disabled={busy || !image || !title.trim()}
+          className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary to-accent px-6 py-3 font-bold text-background disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          <Save size={16} />
+          {editingId ? 'Guardar cambios' : 'Agregar foto'}
+        </button>
+      </form>
+
+      <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        {gallery.map((g) => (
+          <li key={g.id} className="group relative overflow-hidden rounded-xl border border-primary/15 bg-surface">
+            <img
+              src={g.src}
+              alt={g.title}
+              loading="lazy"
+              className="aspect-square w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            />
+            <div className="absolute inset-0 flex flex-col justify-between bg-gradient-to-t from-black/85 via-black/20 to-transparent p-2 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+              <div className="flex justify-end gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => startEdit(g)}
+                  className="rounded-lg border border-primary/40 bg-black/60 px-2.5 py-1.5 text-xs font-bold text-primary-light hover:bg-primary/20"
+                >
+                  Editar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => deleteGalleryImage(g.id)}
+                  className="grid h-7 w-7 place-items-center rounded-lg border border-red-400/40 bg-black/60 text-red-400 hover:bg-red-400/20"
+                  aria-label="Eliminar"
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
+              <div>
+                <p className="truncate text-xs font-semibold text-white">{g.title}</p>
+                <p className="text-[10px] uppercase tracking-wider text-slate-300">{g.category}</p>
+              </div>
+            </div>
+          </li>
+        ))}
+        {gallery.length === 0 && (
+          <li className="col-span-full rounded-xl border border-dashed border-primary/25 p-6 text-center text-sm text-slate-400">
+            No hay fotos todavía. Agrega la primera arriba.
+          </li>
+        )}
       </ul>
     </div>
   )

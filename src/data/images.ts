@@ -1,11 +1,6 @@
-export type Category = 'barberia' | 'cortes' | 'adultos' | 'jovenes'
+import type { Category, GalleryImage } from '../lib/types'
 
-export interface GalleryImage {
-  id: string
-  src: string
-  title: string
-  category: Category
-}
+export type { Category, GalleryImage }
 
 export interface CarouselSlide {
   id: string

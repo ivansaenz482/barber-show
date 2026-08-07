@@ -5,6 +5,7 @@ import type {
   Appointment,
   Barber,
   Client,
+  GalleryImage,
   Order,
   Plan,
   Product,
@@ -12,6 +13,7 @@ import type {
   Service,
   Visit,
 } from '../lib/types'
+import { galleryImages } from '../data/images'
 import { DataContext, type DataContextValue, type Stats } from './data-context'
 
 const CLIENT_KEY = 'exclusive_client_id'
@@ -126,6 +128,7 @@ export default function DataProvider({ children }: { children: ReactNode }) {
   const [orders, setOrders] = useState<Order[]>([])
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [visits, setVisits] = useState<Visit[]>([])
+  const [gallery, setGallery] = useState<GalleryImage[]>(galleryImages)
   const [stats, setStats] = useState<Stats>({ visits: 0, haircuts: 0 })
   const [currentClient, setCurrentClient] = useState<Client | null>(null)
   const [registerModalOpen, setRegisterModalOpen] = useState(false)
@@ -145,6 +148,9 @@ export default function DataProvider({ children }: { children: ReactNode }) {
       store.subscribe<Order>('orders', setOrders),
       store.subscribe<Appointment>('appointments', setAppointments),
       store.subscribe<Visit>('visits', setVisits),
+      store.subscribe<GalleryImage>('gallery', (items) =>
+        setGallery([...items].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))),
+      ),
     ]
     store.statsGet('main').then((s) => {
       setStats({ visits: Number(s.visits) || 0, haircuts: Number(s.haircuts) || 0 })
@@ -233,6 +239,27 @@ export default function DataProvider({ children }: { children: ReactNode }) {
     const found = clients.find((c) => c.id === id)
     setCurrentClient(found ?? null)
   }, [clients])
+
+  useEffect(() => {
+    let cancelled = false
+    const seed = async () => {
+      const meta = (await store.getDoc('_meta', 'seed')) ?? {}
+      if (meta.gallery) return
+      const existing = await store.list<GalleryImage>('gallery')
+      if (existing.length === 0) {
+        galleryImages.forEach((img, i) => {
+          void store.add('gallery', { src: img.src, title: img.title, category: img.category, order: i })
+        })
+      }
+      if (!cancelled) {
+        await store.setDoc('_meta', 'seed', { gallery: true })
+      }
+    }
+    seed()
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   const registerClient = useCallback(
     async (data: { name: string; phone: string; email: string; cedula: string; birthDate: string }) => {
@@ -436,6 +463,7 @@ export default function DataProvider({ children }: { children: ReactNode }) {
     orders,
     appointments,
     visits,
+    gallery,
     stats,
     currentClient,
     registerModalOpen,
@@ -501,6 +529,15 @@ export default function DataProvider({ children }: { children: ReactNode }) {
     },
     deleteBarber: async (id) => {
       await store.remove('barbers', id)
+    },
+    addGalleryImage: async (image) => {
+      await store.add('gallery', { ...image, order: Date.now() })
+    },
+    updateGalleryImage: async (id, image) => {
+      await store.update('gallery', id, image)
+    },
+    deleteGalleryImage: async (id) => {
+      await store.remove('gallery', id)
     },
   }
 
