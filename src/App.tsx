@@ -9,11 +9,13 @@ import Gallery from './components/Gallery'
 import Pricing from './components/Pricing'
 import Promotions from './components/Promotions'
 import Booking from './components/Booking'
+import ClientAccount from './components/ClientAccount'
 import Store from './components/Store'
 import Testimonials from './components/Testimonials'
 import Contact from './components/Contact'
 import Footer from './components/Footer'
 import FloatingWhatsApp from './components/FloatingWhatsApp'
+import InstallAppButton from './components/InstallAppButton'
 import AdminPanel from './components/AdminPanel'
 import ClientRegisterModal from './components/ClientRegisterModal'
 import SettingsProvider from './context/SettingsProvider'
@@ -35,12 +37,14 @@ function App() {
           <Pricing />
           <Promotions />
           <Booking />
+          <ClientAccount />
           <Store />
           <Testimonials />
           <Contact />
         </main>
         <Footer />
         <FloatingWhatsApp />
+        <InstallAppButton />
         <AdminPanel />
         <ClientRegisterModal />
       </DataProvider>

@@ -1,0 +1,51 @@
+{
+  "name": "Exclusive Barber Show — Barbería Premium",
+  "short_name": "Exclusive",
+  "description": "Reserva tu corte, acumula puntos y gana premios en Exclusive Barber Show.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
+  "lang": "es",
+  "categories": ["business", "shopping", "lifestyle"],
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Reservar cita",
+      "url": "/#citas",
+      "description": "Agenda tu corte de cabello"
+    },
+    {
+      "name": "Mi cuenta",
+      "url": "/#mi-cuenta",
+      "description": "Puntos, premios y carnet"
+    },
+    {
+      "name": "Tienda",
+      "url": "/store.html",
+      "description": "Ropa, perfumes y accesorios"
+    }
+  ]
+}

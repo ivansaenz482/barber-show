@@ -1,27 +1,57 @@
-import { type FormEvent, useState } from 'react'
+import { type FormEvent, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
-import { CalendarCheck, CalendarDays, CheckCircle2, Scissors, UserPlus } from 'lucide-react'
+import {
+  BadgePercent,
+  CalendarCheck,
+  CalendarDays,
+  CheckCircle2,
+  Clock,
+  Scissors,
+  Star,
+  UserPlus,
+} from 'lucide-react'
 import SectionHeader from './SectionHeader'
 import { useData } from '../context/data-context'
+import { useSettings } from '../context/settings-context'
+import { applyDiscount, effectiveStatus, isHappyHour, STATUS_META } from '../lib/loyalty'
 
 export default function Booking() {
-  const { currentClient, services, barbers, bookHaircut, openRegister, appointments } = useData()
+  const {
+    currentClient,
+    services,
+    barbers,
+    bookHaircut,
+    openRegister,
+    appointments,
+    rateAppointment,
+  } = useData()
+  const { settings } = useSettings()
   const [serviceId, setServiceId] = useState('')
   const [barberId, setBarberId] = useState('')
   const [date, setDate] = useState('')
+  const [time, setTime] = useState('')
   const [booked, setBooked] = useState<string | null>(null)
 
   const myAppointments = currentClient
     ? appointments.filter((a) => a.clientId === currentClient.id).slice(-5).reverse()
     : []
 
+  const selectedService = services.find((s) => s.id === serviceId)
+  const basePrice = Number(selectedService?.price) || 0
+  const happy = date ? isHappyHour(date, time, settings.loyalty.happyHour) : false
+  const finalPrice = useMemo(
+    () => (happy ? applyDiscount(basePrice, settings.loyalty.happyHour.discountPct) : basePrice),
+    [happy, basePrice, settings.loyalty.happyHour.discountPct],
+  )
+
   const submit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (!serviceId || !barberId || !date) return
     const service = services.find((s) => s.id === serviceId)
-    await bookHaircut(serviceId, date, barberId)
+    await bookHaircut(serviceId, date, barberId, time)
     setBooked(service ? service.name : 'tu cita')
     setDate('')
+    setTime('')
     setServiceId('')
     setBarberId('')
     setTimeout(() => setBooked(null), 5000)
@@ -94,17 +124,42 @@ export default function Booking() {
                     ))}
                   </select>
                 </div>
-                <div>
-                  <label className="mb-2 block text-sm font-semibold text-slate-300">Fecha</label>
-                  <input
-                    type="date"
-                    value={date}
-                    min={new Date().toISOString().split('T')[0]}
-                    onChange={(e) => setDate(e.target.value)}
-                    required
-                    className={inputCls}
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-slate-300">Fecha</label>
+                    <input
+                      type="date"
+                      value={date}
+                      min={new Date().toISOString().split('T')[0]}
+                      onChange={(e) => setDate(e.target.value)}
+                      required
+                      className={inputCls}
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-semibold text-slate-300">
+                      Hora (opcional)
+                    </label>
+                    <input
+                      type="time"
+                      value={time}
+                      onChange={(e) => setTime(e.target.value)}
+                      className={inputCls}
+                    />
+                  </div>
                 </div>
+
+                {happy && selectedService && (
+                  <div className="flex items-start gap-3 rounded-xl border border-gold/40 bg-gold/10 px-4 py-3">
+                    <BadgePercent size={18} className="mt-0.5 shrink-0 text-gold" />
+                    <p className="text-sm text-slate-200">
+                      ¡Happy Hour! Con {settings.loyalty.happyHour.discountPct}% de descuento este
+                      corte te sale en{' '}
+                      <span className="font-bold text-gold">${finalPrice.toFixed(2)}</span>.
+                    </p>
+                  </div>
+                )}
+
                 <button
                   type="submit"
                   className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary to-accent py-3.5 font-bold text-background transition-transform hover:scale-[1.02]"
@@ -167,27 +222,67 @@ export default function Booking() {
             </p>
           ) : (
             <ul className="flex flex-col gap-3">
-              {myAppointments.map((a) => (
-                <li
-                  key={a.id}
-                  className="flex items-center justify-between gap-3 rounded-xl border border-primary/15 bg-surface px-4 py-3"
-                >
-                  <div className="min-w-0">
-                    <p className="truncate font-semibold text-white">{a.serviceName}</p>
-                    <p className="text-xs text-slate-400">
-                      {a.barberName ? `Con ${a.barberName}` : 'Sin barbero asignado'}
-                    </p>
-                    <p className="text-xs text-slate-400">${a.price}</p>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-sm font-bold text-primary-light">
-                    <CalendarDays size={14} />
-                    {new Date(a.date + 'T00:00:00').toLocaleDateString('es', {
-                      day: '2-digit',
-                      month: 'short',
-                    })}
-                  </div>
-                </li>
-              ))}
+              {myAppointments.map((a) => {
+                const status = effectiveStatus(a)
+                const meta = STATUS_META[status]
+                return (
+                  <li key={a.id} className="rounded-xl border border-primary/15 bg-surface px-4 py-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="truncate font-semibold text-white">{a.serviceName}</p>
+                        <p className="text-xs text-slate-400">
+                          {a.barberName ? `Con ${a.barberName}` : 'Sin barbero asignado'} · ${a.price}
+                        </p>
+                        <div className="mt-1 flex items-center gap-1.5 text-xs text-primary-light">
+                          <CalendarDays size={12} />
+                          {new Date(a.date + 'T00:00:00').toLocaleDateString('es', {
+                            day: '2-digit',
+                            month: 'short',
+                          })}
+                          {a.time && (
+                            <>
+                              <Clock size={12} className="ml-1" />
+                              {a.time}
+                            </>
+                          )}
+                        </div>
+                      </div>
+                      <span
+                        className={`shrink-0 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${meta.badge}`}
+                      >
+                        {meta.label}
+                      </span>
+                    </div>
+                    {status === 'completada' && (
+                      <div className="mt-2 flex items-center justify-between gap-2 border-t border-primary/10 pt-2">
+                        <span className="text-xs text-slate-400">
+                          {a.pointsEarned
+                            ? `Ganaste ${a.pointsEarned} puntos`
+                            : 'Corte completado'}
+                        </span>
+                        <span className="flex items-center gap-0.5">
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <button
+                              key={i}
+                              type="button"
+                              aria-label={`Calificar ${i + 1} estrellas`}
+                              onClick={() => rateAppointment(a.id, i + 1)}
+                              className="p-0.5"
+                            >
+                              <Star
+                                size={16}
+                                className={
+                                  i < (a.rating ?? 0) ? 'fill-gold text-gold' : 'text-slate-600'
+                                }
+                              />
+                            </button>
+                          ))}
+                        </span>
+                      </div>
+                    )}
+                  </li>
+                )
+              })}
             </ul>
           )}
         </motion.div>

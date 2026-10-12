@@ -10,6 +10,23 @@ export interface HoursEntry {
   time: string
 }
 
+export interface HappyHourConfig {
+  enabled: boolean
+  days: number[]
+  startHour: number
+  endHour: number
+  discountPct: number
+}
+
+export interface LoyaltyConfig {
+  pointsPerCut: number
+  pointsPerDollar: number
+  signupBonus: number
+  referralBonus: number
+  referredBonus: number
+  happyHour: HappyHourConfig
+}
+
 export interface SiteSettings {
   phone: string
   email: string
@@ -18,6 +35,7 @@ export interface SiteSettings {
   mapEmbed: string
   socials: SocialLink[]
   hours: HoursEntry[]
+  loyalty: LoyaltyConfig
 }
 
 export const ADMIN_PASSWORD = 'exclusive123'
@@ -39,6 +57,35 @@ export const defaultSettings: SiteSettings = {
     { id: 'h2', day: 'Sábado', time: '9:00 – 21:00' },
     { id: 'h3', day: 'Domingo', time: 'Cerrado' },
   ],
+  loyalty: {
+    pointsPerCut: 10,
+    pointsPerDollar: 1,
+    signupBonus: 20,
+    referralBonus: 30,
+    referredBonus: 20,
+    happyHour: {
+      enabled: false,
+      days: [1, 2, 3, 4],
+      startHour: 9,
+      endHour: 13,
+      discountPct: 20,
+    },
+  },
 }
 
 export const STORAGE_KEY = 'exclusive-settings'
+
+export function mergeSettings(base: SiteSettings, patch: Partial<SiteSettings>): SiteSettings {
+  return {
+    ...base,
+    ...patch,
+    loyalty: {
+      ...base.loyalty,
+      ...(patch.loyalty ?? {}),
+      happyHour: {
+        ...base.loyalty.happyHour,
+        ...(patch.loyalty?.happyHour ?? {}),
+      },
+    },
+  }
+}

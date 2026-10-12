@@ -5,6 +5,7 @@ import {
   ADMIN_PASSWORD,
   ADMIN_PASSWORD_KEY,
   defaultSettings,
+  mergeSettings,
   STORAGE_KEY,
   type SiteSettings,
 } from '../data/settings'
@@ -14,8 +15,7 @@ function loadSettings(): SiteSettings {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return defaultSettings
-    const parsed = JSON.parse(raw) as SiteSettings
-    return { ...defaultSettings, ...parsed }
+    return mergeSettings(defaultSettings, JSON.parse(raw) as Partial<SiteSettings>)
   } catch {
     return defaultSettings
   }
@@ -53,7 +53,7 @@ export default function SettingsProvider({ children }: { children: ReactNode }) 
     })
     store.getDoc('settings', 'main').then((doc) => {
       if (cancelled || !doc) return
-      setSettings((prev) => ({ ...defaultSettings, ...prev, ...doc }))
+      setSettings((prev) => mergeSettings(prev, doc as Partial<SiteSettings>))
     })
     return () => {
       cancelled = true

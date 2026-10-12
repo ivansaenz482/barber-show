@@ -4,7 +4,9 @@ import {
   Cake,
   CalendarDays,
   CheckCircle2,
+  Coins,
   CreditCard,
+  Gift,
   Mail,
   Pencil,
   Phone,
@@ -14,6 +16,7 @@ import {
   X,
 } from 'lucide-react'
 import { useData } from '../context/data-context'
+import { clientPoints, levelForCuts } from '../lib/loyalty'
 
 const inputCls =
   'w-full rounded-xl border border-primary/20 bg-surface px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:border-primary focus:outline-none'
@@ -27,6 +30,7 @@ export default function ClientRegisterModal() {
     updateClient,
     logoutClient,
     isBirthday,
+    cutsByClient,
   } = useData()
 
   const [form, setForm] = useState({
@@ -38,6 +42,10 @@ export default function ClientRegisterModal() {
   })
   const [error, setError] = useState('')
   const [editing, setEditing] = useState(false)
+
+  const cuts = currentClient ? cutsByClient(currentClient.id) : 0
+  const level = levelForCuts(cuts)
+  const points = currentClient ? clientPoints(currentClient) : 0
 
   const close = () => {
     setRegisterModalOpen(false)
@@ -153,6 +161,37 @@ export default function ClientRegisterModal() {
                     )}
                   </p>
                 </div>
+
+                <div className="mt-4 grid grid-cols-2 gap-3">
+                  <div className="rounded-2xl border border-gold/30 bg-gold/10 p-4">
+                    <div className="flex items-center gap-2 text-gold">
+                      <Coins size={16} />
+                      <p className="text-xs font-bold uppercase tracking-wider">Mis puntos</p>
+                    </div>
+                    <p className="mt-1 font-display text-3xl font-black text-gold">{points}</p>
+                  </div>
+                  <div className="rounded-2xl border border-primary/20 bg-surface p-4">
+                    <div className="flex items-center gap-2 text-primary-light">
+                      <Gift size={16} />
+                      <p className="text-xs font-bold uppercase tracking-wider">Mi nivel</p>
+                    </div>
+                    <p className={`mt-1 font-display text-xl font-extrabold ${level.colorClass}`}>
+                      {level.emoji} {level.name}
+                    </p>
+                    <p className="text-xs text-slate-400">{cuts} cortes</p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    close()
+                    document.getElementById('mi-cuenta')?.scrollIntoView({ behavior: 'smooth' })
+                  }}
+                  className="mt-3 w-full rounded-full border border-gold/40 py-2.5 text-sm font-bold text-gold transition-colors hover:bg-gold/10"
+                >
+                  Ver mis premios y carnet
+                </button>
 
                 <div className="mt-6 flex flex-col gap-3">
                   <button

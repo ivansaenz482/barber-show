@@ -12,7 +12,8 @@ Sitio web profesional para una barbería (barber show) de marca **EXCLUSIVE**, c
 - **Galería** — filtros por categoría (La Barbería / Adultos / Jóvenes) y lightbox
 - **Precios** — planes Clásico, Premium e Infantil
 - **Promociones** — ofertas con imagen (gestionables desde el panel)
-- **Citas** — reserva de cita en línea para clientes registrados
+- **Citas** — reserva de cita en línea para clientes registrados (con hora y Happy Hour)
+- **Mi cuenta (Club Exclusive)** — puntos, nivel (Bronce/Plata/Oro), carnet QR, premios canjeables y referidos
 - **Tienda** — ropa, perfumes y accesorios con pedido por **WhatsApp** y página completa en pestaña nueva
 - **Opiniones** — testimonios de clientes
 - **Contacto** — formulario de reserva, horarios y datos
@@ -22,10 +23,22 @@ Sitio web profesional para una barbería (barber show) de marca **EXCLUSIVE**, c
 
 | Función | Descripción |
 | --- | --- |
+| App instalable (PWA) | Instálala en Android e iOS desde el navegador; funciona como app nativa y con atajos |
 | Registro por QR | El cliente escanea el código QR de la barbería y se registra (nombre, celular, gmail opcional, cédula, fecha de nacimiento) |
+| Puntos y premios | Cada corte suma puntos; el admin crea premios canjeables (corte gratis, descuentos, productos) |
+| Niveles del cliente | Bronce, Plata y Oro según la cantidad de cortes, con beneficios |
+| Carnet digital QR | El cliente muestra su carnet; el admin lo escanea desde el panel para identificarlo y sumarle puntos |
+| Agenda día/semana | El admin ve las citas de hoy o de la semana y gestiona cada una (confirmar, completar, ausente) |
+| Turnos manuales | El admin puede dar un turno a un cliente que no maneja la tecnología (registrado o nuevo) |
 | Corte gratis de cumpleaños | El sistema detecta cumpleaños y activa el banner dorado "corte gratis" |
+| Referidos | Cada cliente tiene un código; al invitar a un amigo, ambos ganan puntos |
+| Calificaciones | El cliente califica con estrellas cada corte completado; el admin ve el promedio por barbero |
+| Contabilidad | Ingresos (cortes y tienda), gastos por categoría y ganancia neta por mes, exportable a CSV |
+| Comisión por barbero | % de comisión configurable y cálculo de cuánto pagarle a cada barbero |
+| Ranking de barberos | Quién corta más, cuánto efectivo genera, su comisión y calificación promedio |
+| Happy Hour | Descuento automático en días y horarios de poca demanda que el admin configura |
 | Visitas y cortes | Cada visita y cada corte se registra para estadísticas |
-| Panel de administración | Estadísticas, CRUD de servicios/productos/promociones, clientes, pedidos, QR y ajustes |
+| Panel de administración | Estadísticas, CRUD de servicios/productos/promociones/premios, clientes, pedidos, QR y ajustes |
 | Mejores vendidos | El panel calcula los productos más vendidos desde los pedidos |
 | Tienda con carrito | Carrito flotante y pedido enviado por WhatsApp (sin comisiones ni tarjetas) |
 | Modo demo | Sin configurar Firebase, la web funciona en modo local (localStorage) |
@@ -95,15 +108,20 @@ Tras el despliegue, el panel mostrará **"Conectado a Firebase"** y los datos qu
 
 La web incluye un **panel de administración** completo con pestañas:
 
-1. **Estadísticas** — visitas, cortes realizados, clientes, pedidos, **ingresos (cortes, tienda y total)**, **rendimiento por barbero**, productos más vendidos, próximas citas y cumpleañeros de hoy.
-2. **Barberos** — 3 barberos por defecto (Barbero 1, 2 y 3) con nombre editable. Solo el administrador puede agregar más.
-3. **Servicios** — agregar, editar y eliminar servicios con precio (alimenta la sección de citas).
-4. **Productos** — agregar, **editar** y eliminar productos con foto (subida o URL), categoría (ropa/perfume/accesorio) y precio.
-5. **Promociones** — ofertas con foto y descripción, también **editables**.
-6. **Clientes** — registro de clientes con datos completos. El cliente puede corregir sus propios datos desde "Mi cuenta".
-7. **Pedidos** — pedidos de la tienda recibidos.
-8. **QR de registro** — código QR listo para imprimir y colocar en la barbería.
-9. **Ajustes** — celular, correo, dirección, WhatsApp, redes sociales y horarios.
+1. **Estadísticas** — visitas, cortes realizados, clientes, pedidos, **ingresos (cortes, tienda y total)**, **ranking de barberos** (cortes, efectivo, comisión y calificación), productos más vendidos, próximas citas y cumpleañeros de hoy.
+2. **Agenda** — citas de **hoy / esta semana / todas**, con estados (pendiente, confirmada, completada, ausente) y botón **"Dar turno manual"** para clientes sin tecnología.
+3. **Barberos** — nombre y **% de comisión** editable de cada barbero.
+4. **Servicios** — agregar, editar y eliminar servicios con precio (alimenta la sección de citas).
+5. **Productos** — agregar, **editar** y eliminar productos con foto (subida o URL), categoría (ropa/perfume/accesorio) y precio.
+6. **Promociones** — ofertas con foto y descripción, también **editables**.
+7. **Planes** — planes de precios con beneficios editables.
+8. **Galería** — fotos editables con categoría y orden.
+9. **Clientes** — registro con **puntos, nivel, cortes y ausencias**; buscador, **escáner de carnet QR** y botón **± Puntos** para ajustar manualmente.
+10. **Premios** — CRUD de premios canjeables (nombre, descripción, costo en puntos, activo).
+11. **Pedidos** — pedidos de la tienda recibidos.
+12. **Contabilidad** — ingresos del mes, **gastos por categoría**, ganancia neta, **comisión por barbero** y **exportación a CSV**.
+13. **QR de registro** — código QR listo para imprimir y colocar en la barbería.
+14. **Ajustes** — celular, correo, dirección, WhatsApp, redes, horarios y **programa de fidelidad** (puntos, referidos y Happy Hour).
 
 Para entrar: haz clic en **"Administrar página"** (enlace pequeño en el footer) e ingresa la contraseña. Por defecto es: `exclusive123`
 

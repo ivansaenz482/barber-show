@@ -1,13 +1,18 @@
 import { createContext, useContext } from 'react'
 import type {
   Appointment,
+  AppointmentStatus,
   Barber,
   Client,
+  Expense,
   GalleryImage,
   Order,
   Plan,
+  PointMovement,
   Product,
   Promotion,
+  Redemption,
+  Reward,
   Service,
   Visit,
 } from '../lib/types'
@@ -28,6 +33,10 @@ export interface DataContextValue {
   orders: Order[]
   appointments: Appointment[]
   visits: Visit[]
+  rewards: Reward[]
+  expenses: Expense[]
+  pointMovements: PointMovement[]
+  redemptions: Redemption[]
   gallery: GalleryImage[]
   stats: Stats
   currentClient: Client | null
@@ -62,7 +71,29 @@ export interface DataContextValue {
   logoutClient: () => void
   isBirthday: boolean
   recordVisit: () => void
-  bookHaircut: (serviceId: string, date: string, barberId: string) => Promise<void>
+  bookHaircut: (serviceId: string, date: string, barberId: string, time?: string) => Promise<void>
+  bookHaircutAdmin: (payload: {
+    clientId?: string
+    newName?: string
+    newPhone?: string
+    serviceId: string
+    barberId: string
+    date: string
+    time?: string
+  }) => Promise<void>
+  setAppointmentStatus: (id: string, status: AppointmentStatus) => Promise<void>
+  deleteAppointment: (id: string) => Promise<void>
+  rateAppointment: (id: string, rating: number) => Promise<void>
+  cutsByClient: (clientId: string) => number
+  redeemReward: (rewardId: string) => Promise<boolean>
+  adjustClientPoints: (clientId: string, delta: number, reason: string) => Promise<void>
+  addReward: (reward: Omit<Reward, 'id'>) => Promise<void>
+  updateReward: (id: string, reward: Partial<Reward>) => Promise<void>
+  deleteReward: (id: string) => Promise<void>
+  addExpense: (expense: Omit<Expense, 'id'>) => Promise<void>
+  updateExpense: (id: string, expense: Partial<Expense>) => Promise<void>
+  deleteExpense: (id: string) => Promise<void>
+  setRedemptionFulfilled: (id: string, fulfilled: boolean) => Promise<void>
   cart: Record<string, number>
   addToCart: (productId: string) => void
   removeFromCart: (productId: string) => void
@@ -84,7 +115,7 @@ export interface DataContextValue {
   updatePlan: (id: string, plan: Partial<Plan>) => Promise<void>
   deletePlan: (id: string) => Promise<void>
   addBarber: (name: string) => Promise<void>
-  updateBarber: (id: string, name: string) => Promise<void>
+  updateBarber: (id: string, data: { name: string; commissionPct?: number }) => Promise<void>
   deleteBarber: (id: string) => Promise<void>
   addGalleryImage: (image: Omit<GalleryImage, 'id'>) => Promise<void>
   updateGalleryImage: (id: string, image: Partial<GalleryImage>) => Promise<void>

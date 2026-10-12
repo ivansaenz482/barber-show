@@ -3,22 +3,30 @@ import type { ReactNode } from 'react'
 import { store } from '../lib/store'
 import type {
   Appointment,
+  AppointmentStatus,
   Barber,
   Client,
+  Expense,
   GalleryImage,
   Order,
   Plan,
+  PointMovement,
   Product,
   Promotion,
+  Redemption,
+  Reward,
   Service,
   Visit,
 } from '../lib/types'
 import { galleryImages } from '../data/images'
 import { DataContext, type DataContextValue, type Stats } from './data-context'
+import { useSettings } from './settings-context'
+import { applyDiscount, cutPoints, effectiveStatus, isHappyHour } from '../lib/loyalty'
 
 const CLIENT_KEY = 'exclusive_client_id'
 const CART_KEY = 'exclusive_cart'
 const VISIT_KEY = 'exclusive_visit_counted'
+const REF_KEY = 'exclusive_pending_referral'
 
 const PLACEHOLDER_IMAGE =
   'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"%3E%3Crect width="400" height="300" fill="%230a0a0a"/%3E%3Ctext x="200" y="150" fill="%23d4af37" font-size="22" text-anchor="middle" font-family="Arial"%3EAgrega tu foto%3C/text%3E%3C/svg%3E'
@@ -65,9 +73,36 @@ const seedPromotions: Omit<Promotion, 'id'>[] = [
 ]
 
 const seedBarbers: Omit<Barber, 'id'>[] = [
-  { name: 'Barbero 1' },
-  { name: 'Barbero 2' },
-  { name: 'Barbero 3' },
+  { name: 'Barbero 1', commissionPct: 30 },
+  { name: 'Barbero 2', commissionPct: 30 },
+  { name: 'Barbero 3', commissionPct: 30 },
+]
+
+const seedRewards: Omit<Reward, 'id'>[] = [
+  {
+    name: 'Corte GRATIS',
+    description: 'Un corte clásico completamente gratis.',
+    pointsCost: 150,
+    active: true,
+  },
+  {
+    name: '50% de descuento',
+    description: 'Mitad de precio en tu próximo corte.',
+    pointsCost: 80,
+    active: true,
+  },
+  {
+    name: 'Perfilado de barba gratis',
+    description: 'Perfilado de barba de cortesía con tu corte.',
+    pointsCost: 60,
+    active: true,
+  },
+  {
+    name: 'Producto de la tienda',
+    description: 'Un producto gratis: ropa, perfume o accesorio.',
+    pointsCost: 120,
+    active: true,
+  },
 ]
 
 const seedPlans: Omit<Plan, 'id'>[] = [
@@ -119,6 +154,8 @@ function getBirthdayToday(birthDate: string) {
 }
 
 export default function DataProvider({ children }: { children: ReactNode }) {
+  const { settings } = useSettings()
+  const loyalty = settings.loyalty
   const [services, setServices] = useState<Service[]>([])
   const [products, setProducts] = useState<Product[]>([])
   const [promotions, setPromotions] = useState<Promotion[]>([])
@@ -128,6 +165,10 @@ export default function DataProvider({ children }: { children: ReactNode }) {
   const [orders, setOrders] = useState<Order[]>([])
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [visits, setVisits] = useState<Visit[]>([])
+  const [rewards, setRewards] = useState<Reward[]>([])
+  const [expenses, setExpenses] = useState<Expense[]>([])
+  const [pointMovements, setPointMovements] = useState<PointMovement[]>([])
+  const [redemptions, setRedemptions] = useState<Redemption[]>([])
   const [gallery, setGallery] = useState<GalleryImage[]>(galleryImages)
   const [stats, setStats] = useState<Stats>({ visits: 0, haircuts: 0 })
   const [currentClient, setCurrentClient] = useState<Client | null>(null)
@@ -148,6 +189,10 @@ export default function DataProvider({ children }: { children: ReactNode }) {
       store.subscribe<Order>('orders', setOrders),
       store.subscribe<Appointment>('appointments', setAppointments),
       store.subscribe<Visit>('visits', setVisits),
+      store.subscribe<Reward>('rewards', setRewards),
+      store.subscribe<Expense>('expenses', setExpenses),
+      store.subscribe<PointMovement>('pointMovements', setPointMovements),
+      store.subscribe<Redemption>('redemptions', setRedemptions),
       store.subscribe<GalleryImage>('gallery', (items) =>
         setGallery([...items].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))),
       ),
@@ -211,6 +256,12 @@ export default function DataProvider({ children }: { children: ReactNode }) {
           empty: plans.length === 0,
           apply: () => setPlans(seedPlans as Plan[]),
         },
+        {
+          flag: 'rewards',
+          items: seedRewards,
+          empty: rewards.length === 0,
+          apply: () => setRewards(seedRewards as Reward[]),
+        },
       ]
       const pending = jobs.filter((j) => j.empty && !meta[j.flag])
       for (const job of pending) {
@@ -231,7 +282,7 @@ export default function DataProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true
     }
-  }, [services.length, products.length, promotions.length, barbers.length, plans.length])
+  }, [services.length, products.length, promotions.length, barbers.length, plans.length, rewards.length])
 
   useEffect(() => {
     const id = localStorage.getItem(CLIENT_KEY)
@@ -261,16 +312,67 @@ export default function DataProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  useEffect(() => {
+    try {
+      const ref = new URLSearchParams(window.location.search).get('ref')
+      if (ref && !localStorage.getItem(CLIENT_KEY)) localStorage.setItem(REF_KEY, ref.toUpperCase())
+    } catch {
+      /* ignore */
+    }
+  }, [])
+
+  const awardPoints = useCallback(
+    async (client: Client, points: number, reason: string) => {
+      if (points === 0) return
+      const next = (Number(client.points) || 0) + points
+      await store.update('clients', client.id, { points: next })
+      await store.add('pointMovements', {
+        clientId: client.id,
+        clientName: client.name,
+        points,
+        reason,
+        date: new Date().toISOString(),
+      })
+      setCurrentClient((prev) => (prev?.id === client.id ? { ...prev, points: next } : prev))
+    },
+    [],
+  )
+
   const registerClient = useCallback(
     async (data: { name: string; phone: string; email: string; cedula: string; birthDate: string }) => {
+      const now = new Date().toISOString()
       const id = await store.add('clients', {
         name: data.name.trim(),
         phone: data.phone.trim(),
         email: data.email.trim(),
         cedula: data.cedula.trim(),
         birthDate: data.birthDate,
-        createdAt: new Date().toISOString(),
+        createdAt: now,
+        points: 0,
       })
+      const referralCode = `EX-${id.replace(/[^a-zA-Z0-9]/g, '').slice(-6).toUpperCase()}`
+      const pendingRef = localStorage.getItem(REF_KEY) || ''
+      const referrer = pendingRef ? clients.find((c) => c.referralCode === pendingRef) : undefined
+      const bonus = loyalty.signupBonus + (referrer ? loyalty.referredBonus : 0)
+      const patch = {
+        referralCode,
+        referredBy: referrer?.referralCode ?? '',
+        points: bonus,
+      }
+      await store.update('clients', id, patch)
+      if (bonus > 0) {
+        await store.add('pointMovements', {
+          clientId: id,
+          clientName: data.name.trim(),
+          points: bonus,
+          reason: referrer ? 'Bono de bienvenida + referido' : 'Bono de bienvenida',
+          date: now,
+        })
+      }
+      if (referrer) {
+        await awardPoints(referrer, loyalty.referralBonus, `Referido registrado: ${data.name.trim()}`)
+      }
+      localStorage.removeItem(REF_KEY)
       localStorage.setItem(CLIENT_KEY, id)
       const client: Client = {
         id,
@@ -279,14 +381,15 @@ export default function DataProvider({ children }: { children: ReactNode }) {
         email: data.email.trim(),
         cedula: data.cedula.trim(),
         birthDate: data.birthDate,
-        createdAt: new Date().toISOString(),
+        createdAt: now,
+        ...patch,
       }
       setCurrentClient(client)
       setRegisterModalOpen(false)
       registerCallback?.()
       setRegisterCallback(undefined)
     },
-    [registerCallback],
+    [registerCallback, clients, loyalty, awardPoints],
   )
 
   const logoutClient = useCallback(() => {
@@ -361,38 +464,180 @@ export default function DataProvider({ children }: { children: ReactNode }) {
   }, [recordVisit])
 
   const bookHaircut = useCallback(
-    async (serviceId: string, date: string, barberId: string) => {
+    async (serviceId: string, date: string, barberId: string, time?: string) => {
       if (!currentClient) return
       const service = services.find((s) => s.id === serviceId)
       const barber = barbers.find((b) => b.id === barberId)
       if (!service) return
+      const base = Number(service.price) || 0
+      const happy = isHappyHour(date, time, loyalty.happyHour)
+      const price = happy ? applyDiscount(base, loyalty.happyHour.discountPct) : base
       await store.add('appointments', {
         clientId: currentClient.id,
         clientName: currentClient.name,
         serviceId: service.id,
         serviceName: service.name,
-        price: service.price,
+        price: price.toFixed(2),
         barberId: barber?.id ?? '',
         barberName: barber?.name ?? '',
         date,
+        time: time ?? '',
+        status: 'pendiente',
+        createdBy: 'cliente',
         createdAt: new Date().toISOString(),
       })
-      await store.add('visits', {
-        clientId: currentClient.id,
-        clientName: currentClient.name,
-        type: 'haircut',
+    },
+    [currentClient, services, barbers, loyalty],
+  )
+
+  const bookHaircutAdmin = useCallback(
+    async (payload: {
+      clientId?: string
+      newName?: string
+      newPhone?: string
+      serviceId: string
+      barberId: string
+      date: string
+      time?: string
+    }) => {
+      const service = services.find((s) => s.id === payload.serviceId)
+      if (!service) return
+      const barber = barbers.find((b) => b.id === payload.barberId)
+      let clientId = payload.clientId ?? ''
+      let clientName = ''
+      const existing = clients.find((c) => c.id === payload.clientId)
+      if (existing) {
+        clientId = existing.id
+        clientName = existing.name
+      } else if (payload.newName?.trim()) {
+        const now = new Date().toISOString()
+        const id = await store.add('clients', {
+          name: payload.newName.trim(),
+          phone: payload.newPhone?.trim() ?? '',
+          email: '',
+          cedula: '',
+          birthDate: '',
+          createdAt: now,
+          points: 0,
+        })
+        await store.update('clients', id, {
+          referralCode: `EX-${id.replace(/[^a-zA-Z0-9]/g, '').slice(-6).toUpperCase()}`,
+        })
+        clientId = id
+        clientName = payload.newName.trim()
+      }
+      if (!clientId) return
+      const base = Number(service.price) || 0
+      const happy = isHappyHour(payload.date, payload.time, loyalty.happyHour)
+      const price = happy ? applyDiscount(base, loyalty.happyHour.discountPct) : base
+      await store.add('appointments', {
+        clientId,
+        clientName,
         serviceId: service.id,
         serviceName: service.name,
-        price: service.price,
+        price: price.toFixed(2),
         barberId: barber?.id ?? '',
         barberName: barber?.name ?? '',
+        date: payload.date,
+        time: payload.time ?? '',
+        status: 'confirmada',
+        createdBy: 'admin',
+        createdAt: new Date().toISOString(),
+      })
+    },
+    [services, barbers, clients, loyalty],
+  )
+
+  const refreshStats = useCallback(async () => {
+    const s = await store.statsGet('main')
+    setStats({ visits: Number(s.visits) || 0, haircuts: Number(s.haircuts) || 0 })
+  }, [])
+
+  const setAppointmentStatus = useCallback(
+    async (id: string, status: AppointmentStatus) => {
+      const appt = appointments.find((a) => a.id === id)
+      if (!appt) return
+      const prev = effectiveStatus(appt)
+      if (prev === status) return
+      await store.update('appointments', id, { status })
+      if (status !== 'completada' || prev === 'completada') return
+      const price = Number(appt.price) || 0
+      const pts = cutPoints(price, loyalty)
+      await store.update('appointments', id, { pointsEarned: pts })
+      const client = clients.find((c) => c.id === appt.clientId)
+      if (client) {
+        await awardPoints(client, pts, `Corte completado: ${appt.serviceName}`)
+      }
+      await store.add('visits', {
+        clientId: appt.clientId,
+        clientName: appt.clientName,
+        type: 'haircut',
+        serviceId: appt.serviceId,
+        serviceName: appt.serviceName,
+        price: appt.price,
+        barberId: appt.barberId ?? '',
+        barberName: appt.barberName ?? '',
         date: new Date().toISOString(),
       })
       await store.statsIncrement('main', 'haircuts')
-      const s = await store.statsGet('main')
-      setStats({ visits: Number(s.visits) || 0, haircuts: Number(s.haircuts) || 0 })
+      await refreshStats()
     },
-    [currentClient, services, barbers],
+    [appointments, clients, loyalty, awardPoints, refreshStats],
+  )
+
+  const deleteAppointment = useCallback(async (id: string) => {
+    await store.remove('appointments', id)
+  }, [])
+
+  const rateAppointment = useCallback(async (id: string, rating: number) => {
+    await store.update('appointments', id, { rating })
+  }, [])
+
+  const cutsByClient = useCallback(
+    (clientId: string) =>
+      appointments.filter(
+        (a) => a.clientId === clientId && effectiveStatus(a) === 'completada',
+      ).length,
+    [appointments],
+  )
+
+  const redeemReward = useCallback(
+    async (rewardId: string) => {
+      const reward = rewards.find((r) => r.id === rewardId && r.active)
+      if (!reward || !currentClient) return false
+      const pts = Number(currentClient.points) || 0
+      if (pts < reward.pointsCost) return false
+      const next = pts - reward.pointsCost
+      await store.update('clients', currentClient.id, { points: next })
+      setCurrentClient((prev) => (prev ? { ...prev, points: next } : prev))
+      await store.add('pointMovements', {
+        clientId: currentClient.id,
+        clientName: currentClient.name,
+        points: -reward.pointsCost,
+        reason: `Canje: ${reward.name}`,
+        date: new Date().toISOString(),
+      })
+      await store.add('redemptions', {
+        clientId: currentClient.id,
+        clientName: currentClient.name,
+        rewardId: reward.id,
+        rewardName: reward.name,
+        pointsCost: reward.pointsCost,
+        date: new Date().toISOString(),
+        fulfilled: false,
+      })
+      return true
+    },
+    [rewards, currentClient],
+  )
+
+  const adjustClientPoints = useCallback(
+    async (clientId: string, delta: number, reason: string) => {
+      const client = clients.find((c) => c.id === clientId)
+      if (!client || delta === 0) return
+      await awardPoints(client, delta, reason)
+    },
+    [clients, awardPoints],
   )
 
   const addToCart = useCallback((productId: string) => {
@@ -463,6 +708,10 @@ export default function DataProvider({ children }: { children: ReactNode }) {
     orders,
     appointments,
     visits,
+    rewards,
+    expenses,
+    pointMovements,
+    redemptions,
     gallery,
     stats,
     currentClient,
@@ -477,6 +726,34 @@ export default function DataProvider({ children }: { children: ReactNode }) {
     isBirthday,
     recordVisit,
     bookHaircut,
+    bookHaircutAdmin,
+    setAppointmentStatus,
+    deleteAppointment,
+    rateAppointment,
+    cutsByClient,
+    redeemReward,
+    adjustClientPoints,
+    addReward: async (reward) => {
+      await store.add('rewards', reward)
+    },
+    updateReward: async (id, reward) => {
+      await store.update('rewards', id, reward)
+    },
+    deleteReward: async (id) => {
+      await store.remove('rewards', id)
+    },
+    addExpense: async (expense) => {
+      await store.add('expenses', expense)
+    },
+    updateExpense: async (id, expense) => {
+      await store.update('expenses', id, expense)
+    },
+    deleteExpense: async (id) => {
+      await store.remove('expenses', id)
+    },
+    setRedemptionFulfilled: async (id, fulfilled) => {
+      await store.update('redemptions', id, { fulfilled })
+    },
     cart,
     addToCart,
     removeFromCart,
@@ -522,10 +799,10 @@ export default function DataProvider({ children }: { children: ReactNode }) {
       await store.remove('plans', id)
     },
     addBarber: async (name) => {
-      await store.add('barbers', { name })
+      await store.add('barbers', { name, commissionPct: 30 })
     },
-    updateBarber: async (id, name) => {
-      await store.update('barbers', id, { name })
+    updateBarber: async (id, data) => {
+      await store.update('barbers', id, data)
     },
     deleteBarber: async (id) => {
       await store.remove('barbers', id)

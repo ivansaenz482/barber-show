@@ -44,6 +44,7 @@ export interface Plan {
 export interface Barber {
   id: string
   name: string
+  commissionPct?: number
 }
 
 export interface Client {
@@ -54,6 +55,10 @@ export interface Client {
   cedula: string
   birthDate: string
   createdAt: string
+  points?: number
+  referralCode?: string
+  referredBy?: string
+  referralAwarded?: boolean
 }
 
 export interface OrderItem {
@@ -86,6 +91,8 @@ export interface Visit {
   date: string
 }
 
+export type AppointmentStatus = 'pendiente' | 'confirmada' | 'completada' | 'ausente' | 'cancelada'
+
 export interface Appointment {
   id: string
   clientId: string
@@ -96,5 +103,49 @@ export interface Appointment {
   barberId?: string
   barberName?: string
   date: string
+  time?: string
+  status?: AppointmentStatus
+  createdBy?: 'cliente' | 'admin'
+  pointsEarned?: number
+  rating?: number
   createdAt: string
+}
+
+export interface Reward {
+  id: string
+  name: string
+  description: string
+  pointsCost: number
+  active: boolean
+}
+
+export type ExpenseCategory = 'alquiler' | 'insumos' | 'servicios' | 'sueldos' | 'equipos' | 'otros'
+
+export interface Expense {
+  id: string
+  concept: string
+  category: ExpenseCategory
+  amount: string
+  date: string
+  notes?: string
+}
+
+export interface PointMovement {
+  id: string
+  clientId: string
+  clientName: string
+  points: number
+  reason: string
+  date: string
+}
+
+export interface Redemption {
+  id: string
+  clientId: string
+  clientName: string
+  rewardId: string
+  rewardName: string
+  pointsCost: number
+  date: string
+  fulfilled: boolean
 }

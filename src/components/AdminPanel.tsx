@@ -2,10 +2,14 @@ import { useEffect, useMemo, useState } from 'react'
 import type { ElementType, FormEvent } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
+  BadgeCheck,
   BarChart3,
   Cake,
+  CalendarDays,
   Check,
+  CheckCircle2,
   ClipboardList,
+  Download,
   DollarSign,
   Eye,
   EyeOff,
@@ -17,14 +21,20 @@ import {
   QrCode,
   RotateCcw,
   Save,
+  ScanLine,
   Scissors,
   Settings as SettingsIcon,
   ShoppingBag,
+  Star,
   Trash2,
+  Trophy,
   UserCheck,
+  UserPlus,
   UserRound,
   Users,
+  Wallet,
   X,
+  XCircle,
 } from 'lucide-react'
 import { useSettings } from '../context/settings-context'
 import { useData } from '../context/data-context'
@@ -34,8 +44,24 @@ import {
   type SiteSettings,
   type SocialLink,
 } from '../data/settings'
-import type { Category, Client, GalleryImage, Plan, Product, ProductCategory, Promotion } from '../lib/types'
+import type {
+  Appointment,
+  Category,
+  Client,
+  ExpenseCategory,
+  GalleryImage,
+  Plan,
+  Product,
+  ProductCategory,
+  Promotion,
+  Reward,
+} from '../lib/types'
+import { clientPoints, effectiveStatus, levelForCuts, STATUS_META, downloadCsv } from '../lib/loyalty'
 import { socialIcon } from '../lib/social-icons'
+
+interface BarcodeDetectorLike {
+  detect: (source: CanvasImageSource) => Promise<{ rawValue: string }[]>
+}
 
 function compressImage(file: File): Promise<string> {
   return new Promise((resolve) => {
@@ -206,6 +232,7 @@ function ImageInput({
 
 const tabs = [
   { key: 'stats', label: 'Estadísticas', icon: BarChart3 },
+  { key: 'agenda', label: 'Agenda', icon: CalendarDays },
   { key: 'barbers', label: 'Barberos', icon: UserRound },
   { key: 'services', label: 'Servicios', icon: Scissors },
   { key: 'products', label: 'Productos', icon: ShoppingBag },
@@ -213,7 +240,9 @@ const tabs = [
   { key: 'plans', label: 'Planes', icon: Layers },
   { key: 'gallery', label: 'Galería', icon: ImageIcon },
   { key: 'clients', label: 'Clientes', icon: Users },
+  { key: 'rewards', label: 'Premios', icon: Trophy },
   { key: 'orders', label: 'Pedidos', icon: ClipboardList },
+  { key: 'accounting', label: 'Contabilidad', icon: Wallet },
   { key: 'qr', label: 'QR de registro', icon: QrCode },
   { key: 'settings', label: 'Ajustes', icon: SettingsIcon },
 ]
@@ -353,6 +382,7 @@ export default function AdminPanel() {
 
                 <div className="mt-6">
                   {tab === 'stats' && <StatsTab />}
+                  {tab === 'agenda' && <AgendaTab />}
                   {tab === 'barbers' && <BarbersTab />}
                   {tab === 'services' && <ServicesTab />}
                   {tab === 'products' && <ProductsTab />}
@@ -360,7 +390,9 @@ export default function AdminPanel() {
                   {tab === 'plans' && <PlansTab />}
                   {tab === 'gallery' && <GalleryTab />}
                   {tab === 'clients' && <ClientsTab />}
+                  {tab === 'rewards' && <RewardsTab />}
                   {tab === 'orders' && <OrdersTab />}
+                  {tab === 'accounting' && <AccountingTab />}
                   {tab === 'qr' && <QrTab />}
                   {tab === 'settings' && (
                     <SettingsTab
@@ -384,9 +416,14 @@ export default function AdminPanel() {
 function StatsTab() {
   const { stats, clients, orders, appointments, visits, barbers } = useData()
 
-  const cutsRevenue = useMemo(
-    () => appointments.reduce((sum, a) => sum + (Number(a.price) || 0), 0),
+  const completed = useMemo(
+    () => appointments.filter((a) => effectiveStatus(a) === 'completada'),
     [appointments],
+  )
+
+  const cutsRevenue = useMemo(
+    () => completed.reduce((sum, a) => sum + (Number(a.price) || 0), 0),
+    [completed],
   )
 
   const storeRevenue = useMemo(
@@ -398,15 +435,27 @@ function StatsTab() {
 
   const barberStats = useMemo(
     () =>
-      barbers.map((b) => {
-        const cuts = appointments.filter((a) => a.barberId === b.id)
-        return {
-          name: b.name,
-          cuts: cuts.length,
-          revenue: cuts.reduce((sum, a) => sum + (Number(a.price) || 0), 0),
-        }
-      }),
-    [barbers, appointments],
+      barbers
+        .map((b) => {
+          const cuts = completed.filter((a) => a.barberId === b.id)
+          const rated = cuts.filter((a) => a.rating)
+          const revenue = cuts.reduce((sum, a) => sum + (Number(a.price) || 0), 0)
+          const commission = b.commissionPct ?? 0
+          return {
+            id: b.id,
+            name: b.name,
+            cuts: cuts.length,
+            revenue,
+            commissionPct: commission,
+            commission: (revenue * commission) / 100,
+            rating: rated.length
+              ? rated.reduce((s, a) => s + (a.rating ?? 0), 0) / rated.length
+              : 0,
+            ratingCount: rated.length,
+          }
+        })
+        .sort((a, b) => b.revenue - a.revenue),
+    [barbers, completed],
   )
 
   const bestSellers = useMemo(() => {
@@ -473,19 +522,28 @@ function StatsTab() {
 
       <div className="grid gap-5 lg:grid-cols-2">
         <div className="rounded-2xl border border-primary/15 bg-surface p-5">
-          <h3 className="mb-4 text-sm font-bold uppercase tracking-wider text-primary-light">
-            Rendimiento por barbero
+          <h3 className="mb-4 flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-primary-light">
+            <Trophy size={16} className="text-gold" />
+            Ranking de barberos
           </h3>
           <ul className="flex flex-col gap-2">
-            {barberStats.map((b) => (
-              <li key={b.name} className="rounded-xl border border-primary/10 bg-card px-4 py-3">
+            {barberStats.map((b, i) => (
+              <li key={b.id} className="rounded-xl border border-primary/10 bg-card px-4 py-3">
                 <div className="flex items-center justify-between gap-3">
-                  <span className="font-semibold text-white">{b.name}</span>
+                  <span className="flex items-center gap-2 font-semibold text-white">
+                    {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}.`} {b.name}
+                  </span>
                   <span className="font-bold text-gold">${b.revenue.toFixed(2)}</span>
                 </div>
-                <div className="mt-1 flex items-center justify-between text-xs text-slate-400">
-                  <span>{b.cuts} cortes realizados</span>
-                  <span>{b.cuts === 0 ? '—' : `$${(b.revenue / b.cuts).toFixed(2)} por corte`}</span>
+                <div className="mt-1 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-xs text-slate-400">
+                  <span>{b.cuts} cortes</span>
+                  <span>
+                    Comisión {b.commissionPct}%: ${b.commission.toFixed(2)}
+                  </span>
+                  <span className="flex items-center gap-1 text-gold">
+                    <Star size={11} className={b.rating ? 'fill-gold' : ''} />
+                    {b.rating ? `${b.rating.toFixed(1)} (${b.ratingCount})` : 'sin reseñas'}
+                  </span>
                 </div>
               </li>
             ))}
@@ -569,11 +627,683 @@ function StatsTab() {
   )
 }
 
+function AgendaTab() {
+  const {
+    appointments,
+    services,
+    barbers,
+    clients,
+    bookHaircutAdmin,
+    setAppointmentStatus,
+    deleteAppointment,
+  } = useData()
+  const [range, setRange] = useState<'hoy' | 'semana' | 'todas'>('hoy')
+  const [showForm, setShowForm] = useState(false)
+  const [clientId, setClientId] = useState('')
+  const [isNew, setIsNew] = useState(false)
+  const [newName, setNewName] = useState('')
+  const [newPhone, setNewPhone] = useState('')
+  const [serviceId, setServiceId] = useState('')
+  const [barberId, setBarberId] = useState('')
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0])
+  const [time, setTime] = useState('')
+  const [ok, setOk] = useState('')
+
+  const today = new Date().toISOString().split('T')[0]
+  const weekEnd = useMemo(() => {
+    const d = new Date()
+    d.setDate(d.getDate() + 7)
+    return d.toISOString().split('T')[0]
+  }, [])
+
+  const filtered = useMemo(() => {
+    return appointments
+      .filter((a) => {
+        if (range === 'hoy') return a.date === today
+        if (range === 'semana') return a.date >= today && a.date <= weekEnd
+        return true
+      })
+      .sort((a, b) => (a.date + (a.time || '')).localeCompare(b.date + (b.time || '')))
+  }, [appointments, range, today, weekEnd])
+
+  const grouped = useMemo(() => {
+    const map: Record<string, Appointment[]> = {}
+    filtered.forEach((a) => {
+      map[a.date] = map[a.date] ? [...map[a.date], a] : [a]
+    })
+    return Object.entries(map).sort((a, b) => a[0].localeCompare(b[0]))
+  }, [filtered])
+
+  const submit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    if (!serviceId || !barberId || !date) return
+    if (!isNew && !clientId) return
+    if (isNew && !newName.trim()) return
+    await bookHaircutAdmin({
+      clientId: isNew ? undefined : clientId,
+      newName: isNew ? newName : undefined,
+      newPhone: isNew ? newPhone : undefined,
+      serviceId,
+      barberId,
+      date,
+      time,
+    })
+    setOk('Turno asignado correctamente.')
+    setClientId('')
+    setNewName('')
+    setNewPhone('')
+    setServiceId('')
+    setBarberId('')
+    setTime('')
+    setTimeout(() => setOk(''), 3000)
+  }
+
+  const fmtDate = (d: string) =>
+    new Date(d + 'T00:00:00').toLocaleDateString('es', {
+      weekday: 'long',
+      day: '2-digit',
+      month: 'long',
+    })
+
+  return (
+    <div className="flex flex-col gap-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap gap-2">
+          {(['hoy', 'semana', 'todas'] as const).map((r) => (
+            <button
+              key={r}
+              type="button"
+              onClick={() => setRange(r)}
+              className={`rounded-full px-4 py-2 text-xs font-bold capitalize transition-all ${
+                range === r
+                  ? 'bg-gradient-to-r from-primary to-accent text-background'
+                  : 'border border-primary/25 text-slate-300 hover:border-primary/60'
+              }`}
+            >
+              {r === 'hoy' ? 'Hoy' : r === 'semana' ? 'Esta semana' : 'Todas'}
+            </button>
+          ))}
+        </div>
+        <button
+          type="button"
+          onClick={() => setShowForm((v) => !v)}
+          className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary to-accent px-5 py-2.5 text-sm font-bold text-background"
+        >
+          <UserPlus size={16} />
+          Dar turno manual
+        </button>
+      </div>
+
+      {showForm && (
+        <form
+          onSubmit={submit}
+          className="grid gap-4 rounded-2xl border border-primary/20 bg-surface p-5"
+        >
+          <h3 className="text-sm font-bold uppercase tracking-wider text-primary-light">
+            Nuevo turno (para clientes sin tecnología)
+          </h3>
+          <label className="inline-flex cursor-pointer items-center gap-3 text-sm text-slate-300">
+            <input
+              type="checkbox"
+              checked={isNew}
+              onChange={(e) => setIsNew(e.target.checked)}
+              className="h-5 w-5 accent-primary"
+            />
+            Cliente nuevo (no registrado)
+          </label>
+
+          {isNew ? (
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Nombre del cliente" value={newName} onChange={setNewName} />
+              <Field label="Celular" value={newPhone} onChange={setNewPhone} />
+            </div>
+          ) : (
+            <div>
+              <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-400">
+                Cliente registrado
+              </label>
+              <select
+                value={clientId}
+                onChange={(e) => setClientId(e.target.value)}
+                className={inputCls}
+              >
+                <option value="">Selecciona un cliente...</option>
+                {clients.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name} — {c.phone}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div>
+              <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-400">
+                Servicio
+              </label>
+              <select value={serviceId} onChange={(e) => setServiceId(e.target.value)} className={inputCls}>
+                <option value="">Servicio...</option>
+                {services.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name} — ${s.price}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-400">
+                Barbero
+              </label>
+              <select value={barberId} onChange={(e) => setBarberId(e.target.value)} className={inputCls}>
+                <option value="">Barbero...</option>
+                {barbers.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <Field label="Fecha" value={date} onChange={setDate} type="date" />
+            <div>
+              <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-400">
+                Hora (opcional)
+              </label>
+              <input type="time" value={time} onChange={(e) => setTime(e.target.value)} className={inputCls} />
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary to-accent px-6 py-3 font-bold text-background"
+          >
+            <CalendarDays size={16} />
+            Asignar turno
+          </button>
+          {ok && (
+            <p className="rounded-xl border border-primary/30 bg-primary/10 px-4 py-2.5 text-center text-sm font-semibold text-primary-light">
+              {ok}
+            </p>
+          )}
+        </form>
+      )}
+
+      {grouped.length === 0 ? (
+        <p className="rounded-xl border border-dashed border-primary/30 px-4 py-8 text-center text-sm text-slate-400">
+          No hay citas para este rango.
+        </p>
+      ) : (
+        grouped.map(([day, items]) => (
+          <div key={day} className="rounded-2xl border border-primary/15 bg-surface p-4">
+            <p className="mb-3 text-sm font-bold capitalize text-primary-light">{fmtDate(day)}</p>
+            <ul className="flex flex-col gap-2">
+              {items.map((a) => {
+                const status = effectiveStatus(a)
+                const meta = STATUS_META[status]
+                return (
+                  <li key={a.id} className="rounded-xl border border-primary/10 bg-card px-4 py-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="font-semibold text-white">
+                          {a.time ? `${a.time} · ` : ''}
+                          {a.clientName}
+                        </p>
+                        <p className="text-xs text-slate-400">
+                          {a.serviceName} · ${a.price}
+                          {a.barberName ? ` · ${a.barberName}` : ''}
+                          {a.clientName && clients.find((c) => c.id === a.clientId)?.phone
+                            ? ` · ${clients.find((c) => c.id === a.clientId)?.phone}`
+                            : ''}
+                        </p>
+                      </div>
+                      <span
+                        className={`rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-wider ${meta.badge}`}
+                      >
+                        {meta.label}
+                      </span>
+                    </div>
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      {status !== 'completada' && (
+                        <button
+                          type="button"
+                          onClick={() => setAppointmentStatus(a.id, 'completada')}
+                          className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/20 px-3 py-1.5 text-xs font-bold text-emerald-400 hover:bg-emerald-500/30"
+                        >
+                          <CheckCircle2 size={13} />
+                          Completar y sumar puntos
+                        </button>
+                      )}
+                      {status === 'pendiente' && (
+                        <button
+                          type="button"
+                          onClick={() => setAppointmentStatus(a.id, 'confirmada')}
+                          className="inline-flex items-center gap-1.5 rounded-full bg-primary/20 px-3 py-1.5 text-xs font-bold text-primary-light hover:bg-primary/30"
+                        >
+                          <BadgeCheck size={13} />
+                          Confirmar
+                        </button>
+                      )}
+                      {status !== 'ausente' && status !== 'completada' && (
+                        <button
+                          type="button"
+                          onClick={() => setAppointmentStatus(a.id, 'ausente')}
+                          className="inline-flex items-center gap-1.5 rounded-full bg-orange-500/20 px-3 py-1.5 text-xs font-bold text-orange-400 hover:bg-orange-500/30"
+                        >
+                          <XCircle size={13} />
+                          No asistió
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (window.confirm('¿Eliminar esta cita?')) deleteAppointment(a.id)
+                        }}
+                        className="inline-flex items-center gap-1.5 rounded-full border border-red-400/30 px-3 py-1.5 text-xs font-bold text-red-400 hover:bg-red-400/10"
+                      >
+                        <Trash2 size={13} />
+                        Eliminar
+                      </button>
+                      {status === 'completada' && (
+                        <span className="text-xs text-slate-400">
+                          {a.pointsEarned ? `+${a.pointsEarned} pts` : ''}
+                          {a.rating ? ` · ${'★'.repeat(a.rating)}` : ''}
+                        </span>
+                      )}
+                    </div>
+                  </li>
+                )
+              })}
+            </ul>
+          </div>
+        ))
+      )}
+    </div>
+  )
+}
+
+function RewardsTab() {
+  const { rewards, addReward, updateReward, deleteReward } = useData()
+  const empty = { name: '', description: '', pointsCost: 50, active: true }
+  const [form, setForm] = useState<Omit<Reward, 'id'>>(empty)
+  const [editingId, setEditingId] = useState<string | null>(null)
+
+  const startEdit = (r: Reward) => {
+    setEditingId(r.id)
+    setForm({ name: r.name, description: r.description, pointsCost: r.pointsCost, active: r.active })
+  }
+
+  const submit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    if (!form.name.trim()) return
+    if (editingId) {
+      await updateReward(editingId, form)
+      setEditingId(null)
+    } else {
+      await addReward(form)
+    }
+    setForm(empty)
+  }
+
+  return (
+    <div className="flex flex-col gap-5">
+      <form onSubmit={submit} className="flex flex-col gap-4 rounded-2xl border border-primary/15 bg-surface p-5">
+        <h3 className="text-sm font-bold uppercase tracking-wider text-primary-light">
+          {editingId ? 'Editar premio' : 'Agregar premio canjeable'}
+        </h3>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Nombre del premio" value={form.name} onChange={(v) => setForm((f) => ({ ...f, name: v }))} />
+          <Field
+            label="Costo en puntos"
+            value={String(form.pointsCost)}
+            onChange={(v) => setForm((f) => ({ ...f, pointsCost: Math.max(0, Number(v) || 0) }))}
+            type="number"
+          />
+          <div className="sm:col-span-2">
+            <Field
+              label="Descripción"
+              value={form.description}
+              onChange={(v) => setForm((f) => ({ ...f, description: v }))}
+            />
+          </div>
+        </div>
+        <label className="inline-flex cursor-pointer items-center gap-3 text-sm text-slate-300">
+          <input
+            type="checkbox"
+            checked={form.active}
+            onChange={(e) => setForm((f) => ({ ...f, active: e.target.checked }))}
+            className="h-5 w-5 accent-primary"
+          />
+          Disponible para canje
+        </label>
+        <div className="flex gap-3">
+          <button
+            type="submit"
+            className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary to-accent px-6 py-3 font-bold text-background"
+          >
+            <Save size={16} />
+            {editingId ? 'Guardar cambios' : 'Agregar premio'}
+          </button>
+          {editingId && (
+            <button
+              type="button"
+              onClick={() => {
+                setEditingId(null)
+                setForm(empty)
+              }}
+              className="rounded-full border border-primary/30 px-6 py-3 font-bold text-slate-300"
+            >
+              Cancelar
+            </button>
+          )}
+        </div>
+      </form>
+
+      <ul className="flex flex-col gap-2">
+        {rewards.map((r) => (
+          <li key={r.id} className="flex items-center justify-between gap-3 rounded-xl border border-primary/15 bg-surface p-4">
+            <div className="min-w-0">
+              <p className="font-semibold text-white">
+                {r.name}{' '}
+                {!r.active && (
+                  <span className="ml-1 rounded-full bg-slate-500/20 px-2 py-0.5 text-[10px] font-bold uppercase text-slate-400">
+                    Inactivo
+                  </span>
+                )}
+              </p>
+              <p className="text-xs text-slate-400">{r.description}</p>
+              <p className="mt-0.5 text-xs font-bold text-gold">{r.pointsCost} pts</p>
+            </div>
+            <div className="flex shrink-0 gap-2">
+              <button
+                type="button"
+                onClick={() => startEdit(r)}
+                className="rounded-lg border border-primary/30 px-3 py-2 text-xs font-bold text-primary-light hover:bg-primary/10"
+              >
+                Editar
+              </button>
+              <button
+                type="button"
+                onClick={() => deleteReward(r.id)}
+                className="grid h-8 w-8 place-items-center rounded-lg border border-red-400/30 text-red-400 hover:bg-red-400/10"
+                aria-label="Eliminar"
+              >
+                <Trash2 size={15} />
+              </button>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
+const EXPENSE_CATEGORIES: ExpenseCategory[] = [
+  'alquiler',
+  'insumos',
+  'servicios',
+  'sueldos',
+  'equipos',
+  'otros',
+]
+
+function AccountingTab() {
+  const { appointments, orders, expenses, barbers, addExpense, updateExpense, deleteExpense } = useData()
+  const [month, setMonth] = useState(new Date().toISOString().slice(0, 7))
+  const empty = { concept: '', category: 'insumos' as ExpenseCategory, amount: '', date: new Date().toISOString().split('T')[0], notes: '' }
+  const [form, setForm] = useState(empty)
+  const [editingId, setEditingId] = useState<string | null>(null)
+
+  const monthData = useMemo(() => {
+    const completed = appointments.filter(
+      (a) => effectiveStatus(a) === 'completada' && a.date.slice(0, 7) === month,
+    )
+    const cutsRevenue = completed.reduce((s, a) => s + (Number(a.price) || 0), 0)
+    const monthOrders = orders.filter((o) => (o.createdAt || '').slice(0, 7) === month)
+    const storeRevenue = monthOrders.reduce((s, o) => s + (Number(o.total) || 0), 0)
+    const monthExpenses = expenses.filter((e) => (e.date || '').slice(0, 7) === month)
+    const expenseTotal = monthExpenses.reduce((s, e) => s + (Number(e.amount) || 0), 0)
+    const byCategory: Record<string, number> = {}
+    monthExpenses.forEach((e) => {
+      byCategory[e.category] = (byCategory[e.category] || 0) + (Number(e.amount) || 0)
+    })
+    const barberPay = barbers
+      .map((b) => {
+        const cuts = completed.filter((a) => a.barberId === b.id)
+        const revenue = cuts.reduce((s, a) => s + (Number(a.price) || 0), 0)
+        const pct = b.commissionPct ?? 0
+        return { id: b.id, name: b.name, cuts: cuts.length, revenue, pct, pay: (revenue * pct) / 100 }
+      })
+      .sort((a, b) => b.revenue - a.revenue)
+    return {
+      completed,
+      cutsRevenue,
+      storeRevenue,
+      totalRevenue: cutsRevenue + storeRevenue,
+      monthExpenses,
+      expenseTotal,
+      profit: cutsRevenue + storeRevenue - expenseTotal,
+      byCategory,
+      barberPay,
+    }
+  }, [appointments, orders, expenses, barbers, month])
+
+  const submit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    if (!form.concept.trim() || !form.amount.trim()) return
+    if (editingId) {
+      await updateExpense(editingId, form)
+      setEditingId(null)
+    } else {
+      await addExpense(form)
+    }
+    setForm(empty)
+  }
+
+  const exportCsv = () => {
+    const rows: (string | number)[][] = [
+      ['Reporte Exclusive Barber Show'],
+      ['Mes', month],
+      [],
+      ['Ingresos por cortes', monthData.cutsRevenue.toFixed(2)],
+      ['Ingresos por tienda', monthData.storeRevenue.toFixed(2)],
+      ['Ingresos totales', monthData.totalRevenue.toFixed(2)],
+      ['Gastos', monthData.expenseTotal.toFixed(2)],
+      ['Ganancia neta', monthData.profit.toFixed(2)],
+      [],
+      ['Gastos del mes'],
+      ['Fecha', 'Concepto', 'Categoría', 'Monto'],
+      ...monthData.monthExpenses.map((e) => [e.date, e.concept, e.category, Number(e.amount).toFixed(2)]),
+      [],
+      ['Comisión por barbero'],
+      ['Barbero', 'Cortes', 'Ingresos', '% Comisión', 'A pagar'],
+      ...monthData.barberPay.map((b) => [
+        b.name,
+        b.cuts,
+        b.revenue.toFixed(2),
+        `${b.pct}%`,
+        b.pay.toFixed(2),
+      ]),
+    ]
+    downloadCsv(`exclusive-contabilidad-${month}.csv`, rows)
+  }
+
+  return (
+    <div className="flex flex-col gap-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Mes</label>
+          <input
+            type="month"
+            value={month}
+            onChange={(e) => setMonth(e.target.value)}
+            className={inputCls + ' w-auto'}
+          />
+        </div>
+        <button
+          type="button"
+          onClick={exportCsv}
+          className="inline-flex items-center gap-2 rounded-full border border-primary/40 px-5 py-2.5 text-sm font-bold text-primary-light transition-colors hover:bg-primary/10"
+        >
+          <Download size={16} />
+          Exportar CSV
+        </button>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard label="Ingresos cortes" value={`$${monthData.cutsRevenue.toFixed(2)}`} icon={Scissors} accent="bg-primary/20 text-primary-light" />
+        <StatCard label="Ingresos tienda" value={`$${monthData.storeRevenue.toFixed(2)}`} icon={ShoppingBag} accent="bg-accent/20 text-accent" />
+        <StatCard label="Gastos" value={`$${monthData.expenseTotal.toFixed(2)}`} icon={Wallet} accent="bg-red-500/20 text-red-400" />
+        <StatCard
+          label="Ganancia neta"
+          value={`$${monthData.profit.toFixed(2)}`}
+          icon={DollarSign}
+          accent="bg-gold/20 text-gold"
+        />
+      </div>
+
+      <div className="grid gap-5 lg:grid-cols-2">
+        <form onSubmit={submit} className="flex flex-col gap-4 rounded-2xl border border-primary/15 bg-surface p-5">
+          <h3 className="text-sm font-bold uppercase tracking-wider text-primary-light">
+            {editingId ? 'Editar gasto' : 'Registrar gasto'}
+          </h3>
+          <Field label="Concepto" value={form.concept} onChange={(v) => setForm((f) => ({ ...f, concept: v }))} />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-400">
+                Categoría
+              </label>
+              <select
+                value={form.category}
+                onChange={(e) => setForm((f) => ({ ...f, category: e.target.value as ExpenseCategory }))}
+                className={inputCls}
+              >
+                {EXPENSE_CATEGORIES.map((c) => (
+                  <option key={c} value={c} className="capitalize">
+                    {c}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <Field label="Monto ($)" value={form.amount} onChange={(v) => setForm((f) => ({ ...f, amount: v }))} type="number" />
+          </div>
+          <Field label="Fecha" value={form.date} onChange={(v) => setForm((f) => ({ ...f, date: v }))} type="date" />
+          <div className="flex gap-3">
+            <button
+              type="submit"
+              className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary to-accent px-6 py-2.5 font-bold text-background"
+            >
+              <Plus size={16} />
+              {editingId ? 'Guardar' : 'Agregar'}
+            </button>
+            {editingId && (
+              <button
+                type="button"
+                onClick={() => {
+                  setEditingId(null)
+                  setForm(empty)
+                }}
+                className="rounded-full border border-primary/30 px-6 py-2.5 font-bold text-slate-300"
+              >
+                Cancelar
+              </button>
+            )}
+          </div>
+
+          {Object.keys(monthData.byCategory).length > 0 && (
+            <div className="rounded-xl border border-primary/10 bg-card p-3 text-xs text-slate-300">
+              <p className="mb-1 font-bold uppercase tracking-wider text-slate-400">Por categoría</p>
+              {Object.entries(monthData.byCategory).map(([cat, amount]) => (
+                <div key={cat} className="flex justify-between capitalize">
+                  <span>{cat}</span>
+                  <span className="font-bold text-white">${amount.toFixed(2)}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </form>
+
+        <div className="rounded-2xl border border-primary/15 bg-surface p-5">
+          <h3 className="mb-4 flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-primary-light">
+            <Wallet size={16} />
+            Comisión por barbero ({month})
+          </h3>
+          <ul className="flex flex-col gap-2">
+            {monthData.barberPay.map((b) => (
+              <li key={b.id} className="rounded-xl border border-primary/10 bg-card px-4 py-3">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="font-semibold text-white">{b.name}</span>
+                  <span className="font-bold text-gold">${b.pay.toFixed(2)}</span>
+                </div>
+                <p className="mt-1 text-xs text-slate-400">
+                  {b.cuts} cortes · ${b.revenue.toFixed(2)} generado · {b.pct}%
+                </p>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-3 text-xs text-slate-500">
+            Ajusta el % de comisión de cada barbero en la pestaña "Barberos".
+          </p>
+        </div>
+      </div>
+
+      <div className="rounded-2xl border border-primary/15 bg-surface p-5">
+        <h3 className="mb-4 text-sm font-bold uppercase tracking-wider text-primary-light">
+          Gastos de {month}
+        </h3>
+        {monthData.monthExpenses.length === 0 ? (
+          <p className="text-sm text-slate-400">No hay gastos registrados este mes.</p>
+        ) : (
+          <ul className="flex flex-col gap-2">
+            {monthData.monthExpenses.map((e) => (
+              <li key={e.id} className="flex items-center justify-between gap-3 rounded-xl border border-primary/10 bg-card px-4 py-3">
+                <div className="min-w-0">
+                  <p className="font-semibold text-white">{e.concept}</p>
+                  <p className="text-xs capitalize text-slate-400">
+                    {e.category} · {e.date}
+                  </p>
+                </div>
+                <div className="flex shrink-0 items-center gap-2">
+                  <span className="font-bold text-red-400">-${Number(e.amount).toFixed(2)}</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingId(e.id)
+                      setForm({
+                        concept: e.concept,
+                        category: e.category,
+                        amount: e.amount,
+                        date: e.date,
+                        notes: e.notes ?? '',
+                      })
+                    }}
+                    className="rounded-lg border border-primary/30 px-3 py-1.5 text-xs font-bold text-primary-light hover:bg-primary/10"
+                  >
+                    Editar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => deleteExpense(e.id)}
+                    className="grid h-8 w-8 place-items-center rounded-lg border border-red-400/30 text-red-400 hover:bg-red-400/10"
+                    aria-label="Eliminar gasto"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  )
+}
+
 function BarbersTab() {
   const { barbers, addBarber, updateBarber, deleteBarber } = useData()
   const [name, setName] = useState('')
   const [editing, setEditing] = useState<string | null>(null)
   const [editName, setEditName] = useState('')
+  const [editCommission, setEditCommission] = useState('30')
 
   const submit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -599,25 +1329,41 @@ function BarbersTab() {
       </form>
 
       <p className="text-xs text-slate-500">
-        Los clientes eligen a su barbero al reservar una cita. El panel calcula los cortes e
-        ingresos de cada uno.
+        Los clientes eligen a su barbero al reservar una cita. El panel calcula los cortes, los
+        ingresos y la comisión de cada uno.
       </p>
 
       <ul className="flex flex-col gap-2">
         {barbers.map((b) => (
           <li key={b.id} className="rounded-xl border border-primary/15 bg-surface p-3">
             {editing === b.id ? (
-              <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-center">
+              <div className="grid gap-3 sm:grid-cols-[1fr_auto_auto] sm:items-center">
                 <input
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
+                  placeholder="Nombre"
                   className={inputCls}
                 />
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                    Comisión
+                  </span>
+                  <input
+                    type="number"
+                    value={editCommission}
+                    onChange={(e) => setEditCommission(e.target.value)}
+                    className={inputCls + ' w-24'}
+                  />
+                  <span className="text-sm text-slate-400">%</span>
+                </div>
                 <div className="flex gap-2">
                   <button
                     type="button"
                     onClick={async () => {
-                      await updateBarber(b.id, editName)
+                      await updateBarber(b.id, {
+                        name: editName,
+                        commissionPct: Number(editCommission) || 0,
+                      })
                       setEditing(null)
                     }}
                     className="grid h-10 w-10 place-items-center rounded-lg bg-gradient-to-r from-primary to-accent text-background"
@@ -641,7 +1387,12 @@ function BarbersTab() {
                   <span className="grid h-10 w-10 place-items-center rounded-xl bg-primary/15 text-primary-light">
                     <UserRound size={18} />
                   </span>
-                  <p className="font-semibold text-white">{b.name}</p>
+                  <div>
+                    <p className="font-semibold text-white">{b.name}</p>
+                    <p className="text-xs text-slate-400">
+                      Comisión: {b.commissionPct ?? 0}%
+                    </p>
+                  </div>
                 </div>
                 <div className="flex gap-2">
                   <button
@@ -649,10 +1400,11 @@ function BarbersTab() {
                     onClick={() => {
                       setEditing(b.id)
                       setEditName(b.name)
+                      setEditCommission(String(b.commissionPct ?? 30))
                     }}
                     className="rounded-lg border border-primary/30 px-3 py-2 text-xs font-bold text-primary-light hover:bg-primary/10"
                   >
-                    Editar nombre
+                    Editar
                   </button>
                   <button
                     type="button"
@@ -1296,8 +2048,12 @@ function PlansTab() {
 }
 
 function ClientsTab() {
-  const { clients, updateClientById, deleteClient } = useData()
+  const { clients, appointments, cutsByClient, updateClientById, deleteClient, adjustClientPoints } =
+    useData()
   const [editing, setEditing] = useState<string | null>(null)
+  const [search, setSearch] = useState('')
+  const [scanning, setScanning] = useState(false)
+  const [scanError, setScanError] = useState('')
   const [form, setForm] = useState({
     name: '',
     phone: '',
@@ -1305,6 +2061,25 @@ function ClientsTab() {
     cedula: '',
     birthDate: '',
   })
+
+  const noShows = useMemo(() => {
+    const map: Record<string, number> = {}
+    appointments.forEach((a) => {
+      if (effectiveStatus(a) === 'ausente') map[a.clientId] = (map[a.clientId] || 0) + 1
+    })
+    return map
+  }, [appointments])
+
+  const list = useMemo(() => {
+    const q = search.trim().toLowerCase()
+    if (!q) return clients
+    return clients.filter(
+      (c) =>
+        c.name.toLowerCase().includes(q) ||
+        c.phone.toLowerCase().includes(q) ||
+        (c.referralCode || '').toLowerCase().includes(q),
+    )
+  }, [clients, search])
 
   const startEdit = (c: Client) => {
     setEditing(c.id)
@@ -1319,91 +2094,224 @@ function ClientsTab() {
 
   const cancelEdit = () => setEditing(null)
 
+  const findCode = (raw: string) => {
+    const code = raw.includes('|') ? raw.split('|').pop() ?? '' : raw
+    const found = clients.find(
+      (c) => c.referralCode === code.trim() || c.id === code.trim(),
+    )
+    if (found) {
+      setSearch(found.name)
+      setScanError('')
+    } else {
+      setScanError('No se encontró ningún cliente con ese carnet.')
+    }
+  }
+
+  const startScan = async () => {
+    setScanError('')
+    const Detector = (
+      window as unknown as { BarcodeDetector?: new (opts: { formats: string[] }) => BarcodeDetectorLike }
+    ).BarcodeDetector
+    if (!Detector) {
+      setScanError('Tu navegador no soporta escaneo. Entra el código del carnet manualmente.')
+      return
+    }
+    setScanning(true)
+    let active = true
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+      const video = document.createElement('video')
+      video.srcObject = stream
+      video.setAttribute('playsinline', 'true')
+      await video.play()
+      const detector = new Detector({ formats: ['qr_code'] })
+      const deadline = Date.now() + 20000
+      const stop = () => {
+        active = false
+        stream.getTracks().forEach((t) => t.stop())
+        setScanning(false)
+      }
+      const tick = async () => {
+        if (!active) return
+        try {
+          const codes = await detector.detect(video)
+          if (codes.length > 0) {
+            findCode(codes[0].rawValue)
+            stop()
+            return
+          }
+        } catch {
+          /* ignore */
+        }
+        if (Date.now() > deadline) {
+          stop()
+          setScanError('No se detectó ningún código. Intenta de nuevo.')
+          return
+        }
+        requestAnimationFrame(tick)
+      }
+      tick()
+    } catch {
+      setScanning(false)
+      setScanError('No pudimos acceder a la cámara. Entra el código manualmente.')
+    }
+  }
+
+  const addPoints = async (c: Client) => {
+    const amount = window.prompt(`Puntos a sumar a ${c.name} (usa negativo para restar):`, '10')
+    if (amount === null) return
+    const delta = Number(amount)
+    if (!delta) return
+    const reason = window.prompt('Motivo:', delta > 0 ? 'Ajuste del administrador' : 'Corrección')
+    if (reason === null) return
+    await adjustClientPoints(c.id, delta, reason || 'Ajuste del administrador')
+  }
+
   return (
-    <div className="flex flex-col gap-3">
-      {clients.length === 0 ? (
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-3 rounded-2xl border border-primary/15 bg-surface p-4">
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <div className="relative flex-1">
+            <ScanLine
+              size={16}
+              className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500"
+            />
+            <input
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value)
+                setScanError('')
+              }}
+              onKeyDown={(e) => e.key === 'Enter' && findCode(search)}
+              placeholder="Buscar por nombre, celular o escanear carnet (EXCLUSIVE|código)"
+              className={inputCls + ' pl-10'}
+            />
+          </div>
+          <button
+            type="button"
+            onClick={startScan}
+            disabled={scanning}
+            className="inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary to-accent px-5 py-2.5 text-sm font-bold text-background disabled:opacity-60"
+          >
+            <ScanLine size={16} />
+            {scanning ? 'Escaneando...' : 'Escanear carnet'}
+          </button>
+        </div>
+        {scanError && <p className="text-xs font-semibold text-orange-400">{scanError}</p>}
+      </div>
+
+      {list.length === 0 ? (
         <p className="rounded-xl border border-dashed border-primary/30 px-4 py-8 text-center text-sm text-slate-400">
-          Aún no hay clientes registrados.
+          No hay clientes que coincidan.
         </p>
       ) : (
-        <ul className="flex max-h-[50vh] flex-col gap-2 overflow-y-auto">
-          {clients.map((c) => (
-            <li key={c.id} className="rounded-xl border border-primary/15 bg-surface p-4">
-              {editing === c.id ? (
-                <div className="flex flex-col gap-3">
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <Field label="Nombre" value={form.name} onChange={(v) => setForm((f) => ({ ...f, name: v }))} />
-                    <Field label="Celular" value={form.phone} onChange={(v) => setForm((f) => ({ ...f, phone: v }))} />
-                    <Field label="Gmail" value={form.email} onChange={(v) => setForm((f) => ({ ...f, email: v }))} />
-                    <Field label="Cédula" value={form.cedula} onChange={(v) => setForm((f) => ({ ...f, cedula: v }))} />
-                    <Field label="Fecha de nacimiento" value={form.birthDate} onChange={(v) => setForm((f) => ({ ...f, birthDate: v }))} type="date" />
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        if (!form.name.trim() || !form.phone.trim()) return
-                        await updateClientById(c.id, form)
-                        setEditing(null)
-                      }}
-                      className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary to-accent px-5 py-2 text-sm font-bold text-background"
-                    >
-                      <Save size={15} />
-                      Guardar
-                    </button>
-                    <button
-                      type="button"
-                      onClick={cancelEdit}
-                      className="rounded-full border border-primary/30 px-5 py-2 text-sm font-bold text-slate-300"
-                    >
-                      Cancelar
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="font-semibold text-white">{c.name}</p>
-                      <p className="text-sm text-slate-400">{c.phone}</p>
+        <ul className="flex max-h-[55vh] flex-col gap-2 overflow-y-auto">
+          {list.map((c) => {
+            const cuts = cutsByClient(c.id)
+            const level = levelForCuts(cuts)
+            const prizes = noShows[c.id] || 0
+            return (
+              <li key={c.id} className="rounded-xl border border-primary/15 bg-surface p-4">
+                {editing === c.id ? (
+                  <div className="flex flex-col gap-3">
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <Field label="Nombre" value={form.name} onChange={(v) => setForm((f) => ({ ...f, name: v }))} />
+                      <Field label="Celular" value={form.phone} onChange={(v) => setForm((f) => ({ ...f, phone: v }))} />
+                      <Field label="Gmail" value={form.email} onChange={(v) => setForm((f) => ({ ...f, email: v }))} />
+                      <Field label="Cédula" value={form.cedula} onChange={(v) => setForm((f) => ({ ...f, cedula: v }))} />
+                      <Field label="Fecha de nacimiento" value={form.birthDate} onChange={(v) => setForm((f) => ({ ...f, birthDate: v }))} type="date" />
                     </div>
-                    <div className="flex shrink-0 gap-2">
+                    <div className="flex gap-2">
                       <button
                         type="button"
-                        onClick={() => startEdit(c)}
-                        className="rounded-lg border border-primary/30 px-3 py-2 text-xs font-bold text-primary-light hover:bg-primary/10"
-                      >
-                        Editar
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (window.confirm(`¿Eliminar a ${c.name}? Esta acción no se puede deshacer.`)) {
-                            deleteClient(c.id)
-                          }
+                        onClick={async () => {
+                          if (!form.name.trim() || !form.phone.trim()) return
+                          await updateClientById(c.id, form)
+                          setEditing(null)
                         }}
-                        className="grid h-8 w-8 place-items-center rounded-lg border border-red-400/30 text-red-400 hover:bg-red-400/10"
-                        aria-label="Eliminar"
+                        className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary to-accent px-5 py-2 text-sm font-bold text-background"
                       >
-                        <Trash2 size={15} />
+                        <Save size={15} />
+                        Guardar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={cancelEdit}
+                        className="rounded-full border border-primary/30 px-5 py-2 text-sm font-bold text-slate-300"
+                      >
+                        Cancelar
                       </button>
                     </div>
                   </div>
-                  <div className="mt-2 grid gap-1 text-xs text-slate-400 sm:grid-cols-3">
-                    <p>
-                      <span className="font-semibold text-slate-300">Cédula:</span> {c.cedula || '—'}
-                    </p>
-                    <p>
-                      <span className="font-semibold text-slate-300">Cumpleaños:</span> {c.birthDate || '—'}
-                    </p>
-                    <p>
-                      <span className="font-semibold text-slate-300">Gmail:</span> {c.email || '—'}
-                    </p>
-                  </div>
-                </>
-              )}
-            </li>
-          ))}
+                ) : (
+                  <>
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="flex items-center gap-2 font-semibold text-white">
+                          {c.name}
+                          <span className={`text-xs font-bold ${level.colorClass}`}>
+                            {level.emoji} {level.name}
+                          </span>
+                        </p>
+                        <p className="text-sm text-slate-400">{c.phone}</p>
+                      </div>
+                      <div className="flex shrink-0 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => addPoints(c)}
+                          className="rounded-lg border border-gold/40 px-3 py-2 text-xs font-bold text-gold hover:bg-gold/10"
+                        >
+                          ± Puntos
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => startEdit(c)}
+                          className="rounded-lg border border-primary/30 px-3 py-2 text-xs font-bold text-primary-light hover:bg-primary/10"
+                        >
+                          Editar
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (window.confirm(`¿Eliminar a ${c.name}? Esta acción no se puede deshacer.`)) {
+                              deleteClient(c.id)
+                            }
+                          }}
+                          className="grid h-8 w-8 place-items-center rounded-lg border border-red-400/30 text-red-400 hover:bg-red-400/10"
+                          aria-label="Eliminar"
+                        >
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
+                    </div>
+                    <div className="mt-2 grid gap-1 text-xs text-slate-400 sm:grid-cols-3">
+                      <p>
+                        <span className="font-semibold text-slate-300">Puntos:</span>{' '}
+                        <span className="font-bold text-gold">{clientPoints(c)}</span>
+                      </p>
+                      <p>
+                        <span className="font-semibold text-slate-300">Cortes:</span> {cuts}
+                      </p>
+                      <p>
+                        <span className="font-semibold text-slate-300">Ausencias:</span>{' '}
+                        <span className={prizes > 0 ? 'font-bold text-orange-400' : ''}>{prizes}</span>
+                      </p>
+                      <p>
+                        <span className="font-semibold text-slate-300">Cumpleaños:</span> {c.birthDate || '—'}
+                      </p>
+                      <p>
+                        <span className="font-semibold text-slate-300">Gmail:</span> {c.email || '—'}
+                      </p>
+                      <p>
+                        <span className="font-semibold text-slate-300">Carnet:</span>{' '}
+                        {c.referralCode || '—'}
+                      </p>
+                    </div>
+                  </>
+                )}
+              </li>
+            )
+          })}
         </ul>
       )}
     </div>
@@ -1644,6 +2552,153 @@ function SettingsTab({
           <Plus size={16} />
           Agregar horario
         </button>
+      </div>
+
+      <h3 className="mt-8 mb-3 text-sm font-bold uppercase tracking-wider text-primary-light">
+        Programa de fidelidad y puntos
+      </h3>
+      <div className="grid gap-5 rounded-2xl border border-primary/15 bg-surface p-5 sm:grid-cols-2">
+        <Field
+          label="Puntos por corte"
+          value={String(draft.loyalty.pointsPerCut)}
+          onChange={(v) =>
+            setDraft((d) => ({ ...d, loyalty: { ...d.loyalty, pointsPerCut: Number(v) || 0 } }))
+          }
+          type="number"
+        />
+        <Field
+          label="Puntos por dólar del servicio"
+          value={String(draft.loyalty.pointsPerDollar)}
+          onChange={(v) =>
+            setDraft((d) => ({ ...d, loyalty: { ...d.loyalty, pointsPerDollar: Number(v) || 0 } }))
+          }
+          type="number"
+        />
+        <Field
+          label="Bono de bienvenida (puntos)"
+          value={String(draft.loyalty.signupBonus)}
+          onChange={(v) =>
+            setDraft((d) => ({ ...d, loyalty: { ...d.loyalty, signupBonus: Number(v) || 0 } }))
+          }
+          type="number"
+        />
+        <Field
+          label="Puntos para quien invita"
+          value={String(draft.loyalty.referralBonus)}
+          onChange={(v) =>
+            setDraft((d) => ({ ...d, loyalty: { ...d.loyalty, referralBonus: Number(v) || 0 } }))
+          }
+          type="number"
+        />
+        <Field
+          label="Puntos para el invitado"
+          value={String(draft.loyalty.referredBonus)}
+          onChange={(v) =>
+            setDraft((d) => ({ ...d, loyalty: { ...d.loyalty, referredBonus: Number(v) || 0 } }))
+          }
+          type="number"
+        />
+      </div>
+
+      <div className="mt-5 rounded-2xl border border-primary/15 bg-surface p-5">
+        <label className="inline-flex cursor-pointer items-center gap-3 text-sm font-semibold text-white">
+          <input
+            type="checkbox"
+            checked={draft.loyalty.happyHour.enabled}
+            onChange={(e) =>
+              setDraft((d) => ({
+                ...d,
+                loyalty: {
+                  ...d.loyalty,
+                  happyHour: { ...d.loyalty.happyHour, enabled: e.target.checked },
+                },
+              }))
+            }
+            className="h-5 w-5 accent-primary"
+          />
+          Happy Hour (descuento en horarios de poca demanda)
+        </label>
+
+        {draft.loyalty.happyHour.enabled && (
+          <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+            <Field
+              label="Desde (hora)"
+              value={String(draft.loyalty.happyHour.startHour)}
+              onChange={(v) =>
+                setDraft((d) => ({
+                  ...d,
+                  loyalty: {
+                    ...d.loyalty,
+                    happyHour: { ...d.loyalty.happyHour, startHour: Number(v) || 0 },
+                  },
+                }))
+              }
+              type="number"
+            />
+            <Field
+              label="Hasta (hora)"
+              value={String(draft.loyalty.happyHour.endHour)}
+              onChange={(v) =>
+                setDraft((d) => ({
+                  ...d,
+                  loyalty: {
+                    ...d.loyalty,
+                    happyHour: { ...d.loyalty.happyHour, endHour: Number(v) || 0 },
+                  },
+                }))
+              }
+              type="number"
+            />
+            <Field
+              label="Descuento (%)"
+              value={String(draft.loyalty.happyHour.discountPct)}
+              onChange={(v) =>
+                setDraft((d) => ({
+                  ...d,
+                  loyalty: {
+                    ...d.loyalty,
+                    happyHour: { ...d.loyalty.happyHour, discountPct: Number(v) || 0 },
+                  },
+                }))
+              }
+              type="number"
+            />
+            <div className="sm:col-span-2 lg:col-span-2">
+              <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-400">
+                Días
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'].map((label, idx) => {
+                  const active = draft.loyalty.happyHour.days.includes(idx)
+                  return (
+                    <button
+                      key={label}
+                      type="button"
+                      onClick={() =>
+                        setDraft((d) => {
+                          const days = active
+                            ? d.loyalty.happyHour.days.filter((x) => x !== idx)
+                            : [...d.loyalty.happyHour.days, idx]
+                          return {
+                            ...d,
+                            loyalty: { ...d.loyalty, happyHour: { ...d.loyalty.happyHour, days } },
+                          }
+                        })
+                      }
+                      className={`rounded-full px-3 py-1.5 text-xs font-bold transition-colors ${
+                        active
+                          ? 'bg-gradient-to-r from-primary to-accent text-background'
+                          : 'border border-primary/25 text-slate-300'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="mt-8 rounded-2xl border border-primary/15 bg-surface p-5">
