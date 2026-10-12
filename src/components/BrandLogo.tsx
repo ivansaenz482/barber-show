@@ -14,10 +14,10 @@ export default function BrandLogo({
   if (imgOk) {
     return (
       <img
-        src="/logo.png"
+        src="/logo.jpg"
         alt="Exclusive Barber Show"
         onError={() => setImgOk(false)}
-        className={`${height} w-auto object-contain ${className}`}
+        className={`${height} w-auto rounded-lg object-contain ${className}`}
       />
     )
   }
