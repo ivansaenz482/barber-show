@@ -1,11 +1,13 @@
 import { Suspense, lazy, useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { CalendarCheck, ChevronDown, Sparkle, Star, Users } from 'lucide-react'
+import { CalendarCheck, ChevronDown, Power, Sparkle, Sparkles, Star, Users } from 'lucide-react'
 import LiquidGlass from 'liquid-glass-react'
 import { heroBackground } from '../data/images'
 
 const Hero3D = lazy(() => import('./three/Hero3D'))
 const ShaderBackdrop = lazy(() => import('./ShaderBackdrop'))
+
+const FX_KEY = 'exclusive_fx'
 
 const stats = [
   { value: '12+', label: 'Años de experiencia' },
@@ -13,21 +15,79 @@ const stats = [
   { value: '4.9', label: 'Valoración media', icon: true },
 ]
 
-function useWebGL() {
-  const [ok, setOk] = useState(false)
+function detectWebGL(): boolean {
+  try {
+    const canvas = document.createElement('canvas')
+    return !!(
+      canvas.getContext('webgl2') ||
+      canvas.getContext('webgl') ||
+      canvas.getContext('experimental-webgl')
+    )
+  } catch {
+    return false
+  }
+}
+
+function useDeferredEffects() {
+  const [webgl, setWebgl] = useState(false)
+  const [mounted, setMounted] = useState(false)
+  const [enabled, setEnabled] = useState(true)
+
   useEffect(() => {
+    const hasWebgl = detectWebGL()
+    setWebgl(hasWebgl)
+
+    const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
+    const conn = (
+      navigator as Navigator & {
+        connection?: { saveData?: boolean; effectiveType?: string }
+      }
+    ).connection
+    const saveData = conn?.saveData === true
+    const slow = !!conn?.effectiveType && /(^|-)2g|(^|-)3g/.test(conn.effectiveType)
+
+    let stored: string | null = null
     try {
-      const canvas = document.createElement('canvas')
-      const gl =
-        canvas.getContext('webgl2') ||
-        canvas.getContext('webgl') ||
-        canvas.getContext('experimental-webgl')
-      setOk(!!gl)
+      stored = localStorage.getItem(FX_KEY)
     } catch {
-      setOk(false)
+      stored = null
     }
+    if (stored === 'off') setEnabled(false)
+    else if (stored === 'on') setEnabled(true)
+    else setEnabled(!reduced && !saveData && !slow)
   }, [])
-  return ok
+
+  useEffect(() => {
+    if (!webgl || !enabled) {
+      setMounted(false)
+      return
+    }
+    const w = window as Window & {
+      requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number
+      cancelIdleCallback?: (id: number) => void
+    }
+    if (typeof w.requestIdleCallback === 'function') {
+      const id = w.requestIdleCallback(() => setMounted(true), { timeout: 2500 })
+      return () => w.cancelIdleCallback?.(id)
+    }
+    const t = window.setTimeout(() => setMounted(true), 1500)
+    return () => window.clearTimeout(t)
+  }, [webgl, enabled])
+
+  const toggle = () => {
+    setEnabled((v) => {
+      const next = !v
+      try {
+        localStorage.setItem(FX_KEY, next ? 'on' : 'off')
+      } catch {
+        /* ignore */
+      }
+      if (next && webgl) setMounted(true)
+      return next
+    })
+  }
+
+  return { webgl, mounted, enabled, toggle }
 }
 
 function BarberPole() {
@@ -56,7 +116,8 @@ function BarberPole() {
 }
 
 export default function Hero() {
-  const webgl = useWebGL()
+  const { webgl, mounted, enabled, toggle } = useDeferredEffects()
+  const effectsOn = webgl && mounted && enabled
 
   return (
     <section id="inicio" className="relative flex min-h-screen items-center overflow-hidden pt-24">
@@ -66,7 +127,7 @@ export default function Hero() {
           alt="Barbería en movimiento"
           className="h-full w-full scale-105 object-cover opacity-30 animate-kenburns"
         />
-        {webgl && (
+        {effectsOn && (
           <div className="absolute inset-0 opacity-70">
             <Suspense fallback={null}>
               <ShaderBackdrop />
@@ -76,6 +137,19 @@ export default function Hero() {
         <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0a]/85 via-[#0a0a0a]/65 to-[#0a0a0a]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_18%,rgba(2,18,15,0.68)_100%)]" />
       </div>
+
+      {webgl && (
+        <button
+          type="button"
+          onClick={toggle}
+          aria-pressed={enabled}
+          title={enabled ? 'Desactivar efectos 3D' : 'Activar efectos 3D'}
+          className="absolute right-4 top-20 z-20 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-black/40 px-4 py-2 text-xs font-bold text-primary-light backdrop-blur transition-colors hover:bg-primary/15 sm:right-8"
+        >
+          {enabled ? <Sparkles size={14} /> : <Power size={14} />}
+          {enabled ? 'Efectos 3D' : '3D apagado'}
+        </button>
+      )}
 
       <div className="mx-auto grid w-full max-w-7xl items-center gap-12 px-5 py-16 lg:grid-cols-2 lg:px-8">
         <div>
@@ -201,7 +275,7 @@ export default function Hero() {
           <div className="relative">
             <div className="absolute inset-0 -z-10 mx-auto h-full w-3/4 rounded-[3rem] bg-gradient-to-b from-primary/30 to-accent/10 blur-2xl" />
             <div className="relative h-[520px] w-full">
-              {webgl ? (
+              {effectsOn ? (
                 <Suspense fallback={<BarberPole />}>
                   <Hero3D />
                 </Suspense>

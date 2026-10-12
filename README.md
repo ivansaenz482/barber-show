@@ -138,5 +138,5 @@ Notas:
 - Las imágenes del carrusel y la galería son fotos de muestra de Unsplash (URLs públicas). Reemplázalas en `src/data/images.ts` por las fotos reales de tu barbería.
 - La paleta de colores se define en `src/index.css` dentro del bloque `@theme` (estilo barbería profesional: negro `#0a0a0a` con acentos dorados `#d4af37`).
 - El QR del panel usa el servicio gratuito `api.qrserver.com`; apunta a la URL de tu sitio.
-- Los efectos 3D (React Three Fiber) y el fondo shader se cargan de forma diferida (lazy) y, si el dispositivo no soporta WebGL, se muestra automáticamente el poste de barbero animado como respaldo.
+- Los efectos 3D (React Three Fiber) y el fondo shader se cargan de forma diferida (lazy), se montan solo cuando el navegador está inactivo y se auto-desactivan en conexiones lentas, con datos ahorro o si el usuario prefiere menos movimiento. Si el dispositivo no soporta WebGL, se muestra automáticamente el poste de barbero animado como respaldo. El usuario puede encender/apagar los efectos 3D con el botón en la esquina del Hero.
 - El cliente elige con cuál de los 3 barberos quiere cortarse al reservar; el panel registra cortes e ingresos por barbero.
