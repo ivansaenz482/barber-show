@@ -16,6 +16,7 @@ import Contact from './components/Contact'
 import Footer from './components/Footer'
 import FloatingWhatsApp from './components/FloatingWhatsApp'
 import InstallAppButton from './components/InstallAppButton'
+import BottomNav from './components/BottomNav'
 import AdminPanel from './components/AdminPanel'
 import ClientRegisterModal from './components/ClientRegisterModal'
 import SettingsProvider from './context/SettingsProvider'
@@ -43,8 +44,10 @@ function App() {
           <Contact />
         </main>
         <Footer />
+        <div className="h-20 lg:hidden" />
         <FloatingWhatsApp />
         <InstallAppButton />
+        <BottomNav />
         <AdminPanel />
         <ClientRegisterModal />
       </DataProvider>

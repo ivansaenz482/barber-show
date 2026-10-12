@@ -76,7 +76,7 @@ export default function InstallAppButton() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
-            className="fixed bottom-5 left-5 z-[60] flex items-center gap-1 rounded-full border border-primary/30 bg-card/95 p-1 pl-3 shadow-xl shadow-black/40 backdrop-blur sm:bottom-6 sm:left-6"
+            className="fixed bottom-24 left-5 z-[60] flex items-center gap-1 rounded-full border border-primary/30 bg-card/95 p-1 pl-3 shadow-xl shadow-black/40 backdrop-blur lg:bottom-6 lg:left-6"
           >
             <button
               type="button"

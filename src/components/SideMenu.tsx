@@ -29,6 +29,12 @@ export default function SideMenu() {
     }
   }, [open])
 
+  useEffect(() => {
+    const openHandler = () => setOpen(true)
+    window.addEventListener('exclusive:open-menu', openHandler)
+    return () => window.removeEventListener('exclusive:open-menu', openHandler)
+  }, [])
+
   return (
     <>
       <button
