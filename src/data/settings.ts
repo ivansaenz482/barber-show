@@ -47,9 +47,9 @@ export const ADMIN_PASSWORD_KEY = 'exclusive-admin-password'
 export const defaultSettings: SiteSettings = {
   phone: '+1 555 123 4567',
   email: 'hola@exclusivebarbershow.com',
-  address: 'Calle Q3MG+7QP, Elena Valle Schenonne, 090408 Guayaquil, Ecuador',
+  address: 'Elena Valle Schenonne, Parroquia Febres Cordero, 090408 Guayaquil, Ecuador',
   whatsapp: 'https://wa.me/15551234567',
-  mapEmbed: 'https://www.google.com/maps?q=Q3MG%2B7QP%20Elena%20Valle%20Schenonne%2C%20090408%20Guayaquil&output=embed',
+  mapEmbed: 'https://www.google.com/maps?q=-2.2166967,-79.9230501&z=17&output=embed',
   socials: [
     { id: 'instagram', label: 'Instagram', url: 'https://instagram.com/exclusivebarber' },
     { id: 'facebook', label: 'Facebook', url: 'https://facebook.com/exclusivebarber' },
@@ -79,8 +79,15 @@ export const defaultSettings: SiteSettings = {
 
 export const STORAGE_KEY = 'exclusive-settings'
 
+const LEGACY_MAP_EMBEDS = [
+  'https://www.google.com/maps?q=Q3MG%2B7QP%20Elena%20Valle%20Schenonne%2C%20090408%20Guayaquil&output=embed',
+]
+const LEGACY_ADDRESSES = [
+  'Calle Q3MG+7QP, Elena Valle Schenonne, 090408 Guayaquil, Ecuador',
+]
+
 export function mergeSettings(base: SiteSettings, patch: Partial<SiteSettings>): SiteSettings {
-  return {
+  const merged: SiteSettings = {
     ...base,
     ...patch,
     loyalty: {
@@ -92,4 +99,11 @@ export function mergeSettings(base: SiteSettings, patch: Partial<SiteSettings>):
       },
     },
   }
+  if (!merged.mapEmbed || LEGACY_MAP_EMBEDS.includes(merged.mapEmbed)) {
+    merged.mapEmbed = base.mapEmbed
+  }
+  if (!merged.address || LEGACY_ADDRESSES.includes(merged.address)) {
+    merged.address = base.address
+  }
+  return merged
 }

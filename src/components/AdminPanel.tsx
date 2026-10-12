@@ -261,7 +261,7 @@ export default function AdminPanel() {
   const [password, setPassword] = useState('')
   const [showPass, setShowPass] = useState(false)
   const [error, setError] = useState(false)
-  const [tab, setTab] = useState('stats')
+  const [tab, setTab] = useState('agenda')
 
   useEffect(() => {
     const onHash = () => {
@@ -279,7 +279,7 @@ export default function AdminPanel() {
     setAuthed(false)
     setPassword('')
     setError(false)
-    setTab('stats')
+    setTab('agenda')
     if (window.location.hash === '#admin') {
       history.replaceState(null, '', window.location.pathname + window.location.search)
     }

@@ -90,7 +90,7 @@ export default function Footer() {
       </div>
 
       <div className="border-t border-primary/10 py-6">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-5 sm:flex-row lg:px-8">
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-5 sm:flex-row lg:px-8 lg:pr-28">
           <p className="text-center text-xs text-slate-500">
             © {new Date().getFullYear()} Exclusive Barber Show. Todos los derechos reservados.
           </p>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { CalendarCheck, Menu, Smartphone, X } from 'lucide-react'
+import { CalendarCheck, Menu, Settings, Smartphone, X } from 'lucide-react'
 import BrandLogo from './BrandLogo'
 import ShareQr from './ShareQr'
 import { useSettings } from '../context/settings-context'
@@ -106,6 +106,15 @@ export default function SideMenu() {
                   </a>
                 ))}
               </nav>
+
+              <a
+                href="#admin"
+                onClick={() => setOpen(false)}
+                className="mt-2 inline-flex items-center justify-center gap-2 rounded-full border border-primary/25 py-2.5 text-sm font-semibold text-slate-400 transition-colors hover:text-primary-light"
+              >
+                <Settings size={15} />
+                Panel de administración
+              </a>
 
               <ShareQr className="mt-3 inline-flex items-center justify-center gap-2 rounded-full border border-primary/40 py-3 font-bold text-primary-light transition-colors hover:bg-primary/10" />
 
