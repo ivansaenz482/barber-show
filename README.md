@@ -6,7 +6,7 @@ Sitio web profesional para una barbería (barber show) de marca **EXCLUSIVE**, c
 
 ## Secciones
 
-- **Inicio (Hero)** — portada con poste de barbero animado, fondo shader animado (ShaderGradient), escena 3D (React Three Fiber) y tarjetas con efecto **liquid glass**
+- **Inicio (Hero)** — portada con foto de la barbería, fondo shader animado (ShaderGradient) y tarjetas con efecto **liquid glass**
 - **Servicios** — cortes para adultos, jóvenes y niños
 - **Carrusel** — galería automática con transiciones y controles
 - **Galería** — filtros por categoría (La Barbería / Adultos / Jóvenes) y lightbox
@@ -24,7 +24,7 @@ Sitio web profesional para una barbería (barber show) de marca **EXCLUSIVE**, c
 | Función | Descripción |
 | --- | --- |
 | App instalable (PWA) | Instálala en Android e iOS desde el navegador; funciona como app nativa y con atajos |
-| Registro por QR | El cliente escanea el código QR de la barbería y se registra (nombre, celular, gmail opcional, cédula, fecha de nacimiento) |
+| Registro por QR | El cliente escanea el código QR de la barbería y se registra en segundos (solo nombre y celular; Gmail, cédula y cumpleaños opcionales) |
 | Puntos y premios | Cada corte suma puntos; el admin crea premios canjeables (corte gratis, descuentos, productos) |
 | Niveles del cliente | Bronce, Plata y Oro según la cantidad de cortes, con beneficios |
 | Carnet digital QR | El cliente muestra su carnet; el admin lo escanea desde el panel para identificarlo y sumarle puntos |
@@ -52,8 +52,6 @@ Sitio web profesional para una barbería (barber show) de marca **EXCLUSIVE**, c
 | Vite | 8 | Compilador y dev server |
 | Tailwind CSS | 4 | Estilos y diseño |
 | Framer Motion | 13 | Animaciones |
-| Three.js | 0.186 | Motor 3D |
-| React Three Fiber | 9 | Escena 3D en React (Hero) |
 | ShaderGradient | 2 | Fondo con degradado animado (shader) |
 | Liquid Glass | 1 | Efecto de vidrio líquido en tarjetas del Hero |
 | Lucide React | 1 | Iconos |
@@ -138,5 +136,6 @@ Notas:
 - Las imágenes del carrusel y la galería son fotos de muestra de Unsplash (URLs públicas). Reemplázalas en `src/data/images.ts` por las fotos reales de tu barbería.
 - La paleta de colores se define en `src/index.css` dentro del bloque `@theme` (estilo barbería profesional: negro `#0a0a0a` con acentos dorados `#d4af37`).
 - El QR del panel usa el servicio gratuito `api.qrserver.com`; apunta a la URL de tu sitio.
-- Los efectos 3D (React Three Fiber) y el fondo shader se cargan de forma diferida (lazy), se montan solo cuando el navegador está inactivo y se auto-desactivan en conexiones lentas, con datos ahorro o si el usuario prefiere menos movimiento. Si el dispositivo no soporta WebGL, se muestra automáticamente el poste de barbero animado como respaldo. El usuario puede encender/apagar los efectos 3D con el botón en la esquina del Hero.
+- El fondo shader del Hero se carga de forma diferida (lazy), se monta solo cuando el navegador está inactivo y se auto-desactiva en conexiones lentas, con ahorro de datos o si el usuario prefiere menos movimiento. Se puede encender/apagar con el botón "Fondo animado" en el Hero.
+- El registro del cliente pide solo **nombre y celular**; los datos extra (Gmail, cédula y cumpleaños) son opcionales y están en un desplegable, para que reservar sea lo más rápido posible.
 - El cliente elige con cuál de los 3 barberos quiere cortarse al reservar; el panel registra cortes e ingresos por barbero.

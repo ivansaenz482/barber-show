@@ -139,3 +139,5 @@ export const galleryImages: GalleryImage[] = [
 ]
 
 export const heroBackground = u('photo-1621605815971-fbc98d665033', 2000)
+
+export const heroFigure = u('photo-1605497788044-5a32c7078486', 1200)

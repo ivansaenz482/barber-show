@@ -42,6 +42,7 @@ export default function ClientRegisterModal() {
   })
   const [error, setError] = useState('')
   const [editing, setEditing] = useState(false)
+  const [showMore, setShowMore] = useState(false)
 
   const cuts = currentClient ? cutsByClient(currentClient.id) : 0
   const level = levelForCuts(cuts)
@@ -51,6 +52,7 @@ export default function ClientRegisterModal() {
     setRegisterModalOpen(false)
     setError('')
     setEditing(false)
+    setShowMore(false)
   }
 
   const startEdit = () => {
@@ -63,13 +65,14 @@ export default function ClientRegisterModal() {
       birthDate: currentClient.birthDate,
     })
     setEditing(true)
+    setShowMore(true)
     setError('')
   }
 
   const submit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    if (!form.name.trim() || !form.phone.trim() || !form.cedula.trim() || !form.birthDate) {
-      setError('Completa los campos obligatorios (el correo es opcional).')
+    if (!form.name.trim() || !form.phone.trim()) {
+      setError('Solo necesitas tu nombre y tu celular para registrarte.')
       return
     }
     setError('')
@@ -221,15 +224,15 @@ export default function ClientRegisterModal() {
                     <>Corrige los datos que necesites y pulsa guardar.</>
                   ) : (
                     <>
-                      Escaneaste el QR de{' '}
+                      Bienvenido a{' '}
                       <span className="font-bold text-primary-light">Exclusive Barber Show</span>.
-                      Regístrate en segundos para acceder a beneficios:
+                      Solo con tu nombre y celular ya puedes reservar tu turno:
                     </>
                   )}
                 </p>
 
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="sm:col-span-2">
+                <div className="flex flex-col gap-4">
+                  <div>
                     <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-400">
                       Nombre completo *
                     </label>
@@ -237,6 +240,7 @@ export default function ClientRegisterModal() {
                       <User size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
                       <input
                         type="text"
+                        autoFocus
                         value={form.name}
                         onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
                         placeholder="Tu nombre"
@@ -247,7 +251,7 @@ export default function ClientRegisterModal() {
 
                   <div>
                     <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-400">
-                      Celular *
+                      Celular / WhatsApp *
                     </label>
                     <div className="relative">
                       <Phone size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
@@ -260,55 +264,72 @@ export default function ClientRegisterModal() {
                       />
                     </div>
                   </div>
-
-                  <div>
-                    <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-400">
-                      Gmail (opcional)
-                    </label>
-                    <div className="relative">
-                      <Mail size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
-                      <input
-                        type="email"
-                        value={form.email}
-                        onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-                        placeholder="tucorreo@gmail.com"
-                        className={inputCls + ' pl-10'}
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-400">
-                      Cédula *
-                    </label>
-                    <div className="relative">
-                      <CreditCard size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
-                      <input
-                        type="text"
-                        value={form.cedula}
-                        onChange={(e) => setForm((f) => ({ ...f, cedula: e.target.value }))}
-                        placeholder="N° de identificación"
-                        className={inputCls + ' pl-10'}
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-400">
-                      Fecha de nacimiento *
-                    </label>
-                    <div className="relative">
-                      <CalendarDays size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
-                      <input
-                        type="date"
-                        value={form.birthDate}
-                        max={new Date().toISOString().split('T')[0]}
-                        onChange={(e) => setForm((f) => ({ ...f, birthDate: e.target.value }))}
-                        className={inputCls + ' pl-10'}
-                      />
-                    </div>
-                  </div>
                 </div>
+
+                <button
+                  type="button"
+                  onClick={() => setShowMore((v) => !v)}
+                  className="w-full rounded-xl border border-dashed border-primary/40 py-2.5 text-sm font-semibold text-primary-light transition-colors hover:bg-primary/10"
+                >
+                  {showMore ? 'Ocultar datos opcionales' : '+ Añadir cumpleaños y más datos (opcional)'}
+                </button>
+
+                {showMore && (
+                  <div className="flex flex-col gap-4">
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="sm:col-span-2">
+                        <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-400">
+                          Gmail (opcional)
+                        </label>
+                        <div className="relative">
+                          <Mail size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
+                          <input
+                            type="email"
+                            value={form.email}
+                            onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+                            placeholder="tucorreo@gmail.com"
+                            className={inputCls + ' pl-10'}
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-400">
+                          Cédula (opcional)
+                        </label>
+                        <div className="relative">
+                          <CreditCard size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
+                          <input
+                            type="text"
+                            value={form.cedula}
+                            onChange={(e) => setForm((f) => ({ ...f, cedula: e.target.value }))}
+                            placeholder="N° de identificación"
+                            className={inputCls + ' pl-10'}
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-400">
+                          Cumpleaños (opcional)
+                        </label>
+                        <div className="relative">
+                          <CalendarDays size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
+                          <input
+                            type="date"
+                            value={form.birthDate}
+                            max={new Date().toISOString().split('T')[0]}
+                            onChange={(e) => setForm((f) => ({ ...f, birthDate: e.target.value }))}
+                            className={inputCls + ' pl-10'}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <p className="rounded-xl border border-gold/30 bg-gold/10 px-4 py-2.5 text-xs text-gold">
+                      🎂 Si agregas tu cumpleaños, ese día tu corte es GRATIS.
+                    </p>
+                  </div>
+                )}
 
                 {error && (
                   <p className="rounded-xl border border-red-400/30 bg-red-400/10 px-4 py-2.5 text-sm font-semibold text-red-400">
@@ -322,7 +343,7 @@ export default function ClientRegisterModal() {
                     className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-primary to-accent py-3.5 font-bold text-background transition-transform hover:scale-[1.02]"
                   >
                     <CheckCircle2 size={18} />
-                    {editing ? 'Guardar cambios' : 'Completar registro'}
+                    {editing ? 'Guardar cambios' : 'Registrarme ahora'}
                   </button>
                   {editing && (
                     <button

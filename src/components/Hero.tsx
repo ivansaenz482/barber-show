@@ -2,9 +2,8 @@ import { Suspense, lazy, useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { CalendarCheck, ChevronDown, Power, Sparkle, Sparkles, Star, Users } from 'lucide-react'
 import LiquidGlass from 'liquid-glass-react'
-import { heroBackground } from '../data/images'
+import { heroBackground, heroFigure } from '../data/images'
 
-const Hero3D = lazy(() => import('./three/Hero3D'))
 const ShaderBackdrop = lazy(() => import('./ShaderBackdrop'))
 
 const FX_KEY = 'exclusive_fx'
@@ -28,14 +27,13 @@ function detectWebGL(): boolean {
   }
 }
 
-function useDeferredEffects() {
+function useDeferredBackdrop() {
   const [webgl, setWebgl] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [enabled, setEnabled] = useState(true)
 
   useEffect(() => {
-    const hasWebgl = detectWebGL()
-    setWebgl(hasWebgl)
+    setWebgl(detectWebGL())
 
     const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
     const conn = (
@@ -90,34 +88,9 @@ function useDeferredEffects() {
   return { webgl, mounted, enabled, toggle }
 }
 
-function BarberPole() {
-  return (
-    <div className="relative mx-auto h-80 w-20 sm:h-96">
-      <motion.div
-        className="h-full w-full rounded-full bg-gradient-to-b from-primary via-white via-40% to-gold shadow-2xl shadow-primary/40"
-        style={{
-          backgroundImage: `repeating-linear-gradient(135deg,
-            #d4af37 0px, #d4af37 18px,
-            #f8fafc 18px, #f8fafc 36px,
-            #f0c26b 36px, #f0c26b 54px,
-            #f8fafc 54px, #f8fafc 72px)`,
-        }}
-        animate={{ rotate: 360 }}
-        transition={{ duration: 18, repeat: Infinity, ease: 'linear' }}
-      />
-      <div className="absolute -left-6 top-1/2 -translate-y-1/2 rounded-full bg-slate-900/80 px-3 py-2 text-sm font-bold tracking-wide text-primary-light shadow-xl backdrop-blur">
-        ✂
-      </div>
-      <div className="absolute -right-6 top-1/3 rounded-full bg-slate-900/80 px-3 py-2 text-sm font-bold tracking-wide text-gold shadow-xl backdrop-blur">
-        ✂
-      </div>
-    </div>
-  )
-}
-
 export default function Hero() {
-  const { webgl, mounted, enabled, toggle } = useDeferredEffects()
-  const effectsOn = webgl && mounted && enabled
+  const { webgl, mounted, enabled, toggle } = useDeferredBackdrop()
+  const showBackdrop = webgl && mounted && enabled
 
   return (
     <section id="inicio" className="relative flex min-h-screen items-center overflow-hidden pt-24">
@@ -127,7 +100,7 @@ export default function Hero() {
           alt="Barbería en movimiento"
           className="h-full w-full scale-105 object-cover opacity-30 animate-kenburns"
         />
-        {effectsOn && (
+        {showBackdrop && (
           <div className="absolute inset-0 opacity-70">
             <Suspense fallback={null}>
               <ShaderBackdrop />
@@ -143,11 +116,11 @@ export default function Hero() {
           type="button"
           onClick={toggle}
           aria-pressed={enabled}
-          title={enabled ? 'Desactivar efectos 3D' : 'Activar efectos 3D'}
+          title={enabled ? 'Desactivar fondo animado' : 'Activar fondo animado'}
           className="absolute right-4 top-20 z-20 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-black/40 px-4 py-2 text-xs font-bold text-primary-light backdrop-blur transition-colors hover:bg-primary/15 sm:right-8"
         >
           {enabled ? <Sparkles size={14} /> : <Power size={14} />}
-          {enabled ? 'Efectos 3D' : '3D apagado'}
+          {enabled ? 'Fondo animado' : 'Fondo apagado'}
         </button>
       )}
 
@@ -267,36 +240,51 @@ export default function Hero() {
         </div>
 
         <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
+          initial={{ opacity: 0, scale: 0.94 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8, delay: 0.3 }}
           className="hidden lg:block"
         >
           <div className="relative">
             <div className="absolute inset-0 -z-10 mx-auto h-full w-3/4 rounded-[3rem] bg-gradient-to-b from-primary/30 to-accent/10 blur-2xl" />
-            <div className="relative h-[520px] w-full">
-              {effectsOn ? (
-                <Suspense fallback={<BarberPole />}>
-                  <Hero3D />
-                </Suspense>
-              ) : (
-                <BarberPole />
-              )}
-            </div>
-            <div className="absolute bottom-2 left-1/2 -translate-x-1/2">
-              <LiquidGlass
-                cornerRadius={999}
-                blurAmount={0.14}
-                saturation={1.4}
-                displacementScale={56}
-                aberrationIntensity={1.6}
-                padding="10px 20px"
-              >
-                <span className="flex items-center gap-2 whitespace-nowrap text-sm font-semibold text-slate-100">
-                  <Users size={16} className="text-primary-light" />
-                  +8,000 clientes felices
-                </span>
-              </LiquidGlass>
+            <div className="relative overflow-hidden rounded-[2.5rem] border border-primary/20 shadow-2xl shadow-primary/20">
+              <img
+                src={heroFigure}
+                alt="Interior de Exclusive Barber Show"
+                className="h-[520px] w-full object-cover"
+                loading="eager"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a]/85 via-[#0a0a0a]/10 to-transparent" />
+              <div className="absolute left-5 top-5">
+                <LiquidGlass
+                  cornerRadius={999}
+                  blurAmount={0.12}
+                  saturation={1.4}
+                  displacementScale={48}
+                  aberrationIntensity={1.4}
+                  padding="8px 16px"
+                >
+                  <span className="flex items-center gap-2 whitespace-nowrap text-xs font-bold uppercase tracking-wider text-slate-100">
+                    <Sparkle size={13} className="text-gold" />
+                    Barbershop premium
+                  </span>
+                </LiquidGlass>
+              </div>
+              <div className="absolute bottom-5 left-1/2 -translate-x-1/2">
+                <LiquidGlass
+                  cornerRadius={999}
+                  blurAmount={0.14}
+                  saturation={1.4}
+                  displacementScale={56}
+                  aberrationIntensity={1.6}
+                  padding="10px 20px"
+                >
+                  <span className="flex items-center gap-2 whitespace-nowrap text-sm font-semibold text-slate-100">
+                    <Users size={16} className="text-primary-light" />
+                    +8,000 clientes felices
+                  </span>
+                </LiquidGlass>
+              </div>
             </div>
           </div>
         </motion.div>
