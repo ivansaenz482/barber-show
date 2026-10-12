@@ -1,5 +1,6 @@
 import { Settings } from 'lucide-react'
 import BrandLogo from './BrandLogo'
+import ShareQr from './ShareQr'
 import { useSettings } from '../context/settings-context'
 import { socialIcon } from '../lib/social-icons'
 
@@ -93,13 +94,16 @@ export default function Footer() {
           <p className="text-center text-xs text-slate-500">
             © {new Date().getFullYear()} Exclusive Barber Show. Todos los derechos reservados.
           </p>
-          <a
-            href="#admin"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 transition-colors hover:text-primary-light"
-          >
-            <Settings size={13} />
-            Administrar página
-          </a>
+          <div className="flex flex-wrap items-center justify-center gap-4">
+            <ShareQr className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 transition-colors hover:text-primary-light" />
+            <a
+              href="#admin"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 transition-colors hover:text-primary-light"
+            >
+              <Settings size={13} />
+              Administrar página
+            </a>
+          </div>
         </div>
       </div>
     </footer>

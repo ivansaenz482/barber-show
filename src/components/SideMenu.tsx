@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { CalendarCheck, Menu, X } from 'lucide-react'
 import BrandLogo from './BrandLogo'
+import ShareQr from './ShareQr'
 import { useSettings } from '../context/settings-context'
 import { themeDef } from '../lib/themes'
 
@@ -97,6 +98,8 @@ export default function SideMenu() {
                   </a>
                 ))}
               </nav>
+
+              <ShareQr className="mt-3 inline-flex items-center justify-center gap-2 rounded-full border border-primary/40 py-3 font-bold text-primary-light transition-colors hover:bg-primary/10" />
 
               <a
                 href="#citas"
