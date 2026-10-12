@@ -1,4 +1,4 @@
-const CACHE = 'exclusive-v1'
+const CACHE = 'exclusive-v2'
 const PRECACHE = [
   '/',
   '/index.html',
