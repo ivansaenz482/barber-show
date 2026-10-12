@@ -141,3 +141,6 @@ export const galleryImages: GalleryImage[] = [
 export const heroBackground = u('photo-1621605815971-fbc98d665033', 1600, 65)
 
 export const heroFigure = u('photo-1605497788044-5a32c7078486', 1000, 68)
+
+export const waitingImage =
+  'https://images.pexels.com/photos/442576/pexels-photo-442576.jpeg?auto=compress&cs=tinysrgb&w=1200'

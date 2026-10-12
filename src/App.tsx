@@ -8,6 +8,7 @@ import Carousel from './components/Carousel'
 import Gallery from './components/Gallery'
 import Pricing from './components/Pricing'
 import Promotions from './components/Promotions'
+import WaitingArea from './components/WaitingArea'
 import Booking from './components/Booking'
 import ClientAccount from './components/ClientAccount'
 import Store from './components/Store'
@@ -37,6 +38,7 @@ function App() {
           <Gallery />
           <Pricing />
           <Promotions />
+          <WaitingArea />
           <Booking />
           <ClientAccount />
           <Store />
