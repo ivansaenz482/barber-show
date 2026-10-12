@@ -38,6 +38,10 @@ export default function SettingsProvider({ children }: { children: ReactNode }) 
   }, [settings])
 
   useEffect(() => {
+    document.documentElement.dataset.theme = settings.theme ?? 'normal'
+  }, [settings.theme])
+
+  useEffect(() => {
     if (!store.isCloud()) return
     let cancelled = false
     store.getDoc('settings', 'admin').then((doc) => {

@@ -73,7 +73,7 @@ body {
 }
 
 ::selection {
-  background-color: rgba(212, 175, 55, 0.4);
+  background-color: color-mix(in srgb, var(--color-primary) 45%, transparent);
   color: #ffffff;
 }
 
@@ -82,23 +82,30 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #0a0a0a;
+  background: var(--color-background);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #a8862a, #d4af37);
+  background: linear-gradient(180deg, var(--color-primary-dark), var(--color-primary));
   border-radius: 8px;
 }
 
 .text-gradient {
-  background: linear-gradient(90deg, #e9c968, #f0d078, #fff8dc);
+  background: linear-gradient(90deg, var(--color-primary-light), var(--color-accent), #fff8dc);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 
 .text-gradient-animated {
-  background: linear-gradient(90deg, #e9c968, #fff8dc, #ffffff, #f5d76e, #e9c968);
+  background: linear-gradient(
+    90deg,
+    var(--color-primary-light),
+    #fff8dc,
+    #ffffff,
+    var(--color-gold),
+    var(--color-primary-light)
+  );
   background-size: 300% auto;
   -webkit-background-clip: text;
   background-clip: text;
@@ -122,7 +129,85 @@ body {
 }
 
 .glass {
-  background: rgba(17, 17, 17, 0.6);
+  background: color-mix(in srgb, var(--color-card) 62%, transparent);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
+}
+
+/* ===================== Temporadas (modos) ===================== */
+:root[data-theme='normal'] {
+  --color-background: #0a0a0a;
+  --color-surface: #161616;
+  --color-card: #111111;
+  --color-primary: #d4af37;
+  --color-primary-light: #e9c968;
+  --color-primary-dark: #a8862a;
+  --color-accent: #f0d078;
+  --color-gold: #f5d76e;
+}
+
+:root[data-theme='halloween'] {
+  --color-background: #0d0a12;
+  --color-surface: #1a1420;
+  --color-card: #141019;
+  --color-primary: #ff7a18;
+  --color-primary-light: #ffa94d;
+  --color-primary-dark: #b45309;
+  --color-accent: #b45cff;
+  --color-gold: #ffb347;
+}
+
+:root[data-theme='navidad'] {
+  --color-background: #0a0f0d;
+  --color-surface: #12201a;
+  --color-card: #0e1a15;
+  --color-primary: #e63946;
+  --color-primary-light: #ff6b6b;
+  --color-primary-dark: #a4161a;
+  --color-accent: #2a9d8f;
+  --color-gold: #f1c40f;
+}
+
+:root[data-theme='playera'] {
+  --color-background: #041a1f;
+  --color-surface: #0a2a30;
+  --color-card: #062026;
+  --color-primary: #06b6d4;
+  --color-primary-light: #22d3ee;
+  --color-primary-dark: #0e7490;
+  --color-accent: #f59e0b;
+  --color-gold: #fbbf24;
+}
+
+:root[data-theme='san-valentin'] {
+  --color-background: #1a070d;
+  --color-surface: #2a0d15;
+  --color-card: #200a10;
+  --color-primary: #e11d48;
+  --color-primary-light: #fb7185;
+  --color-primary-dark: #9f1239;
+  --color-accent: #f43f5e;
+  --color-gold: #ff8fa3;
+}
+
+:root[data-theme='dia-padre'] {
+  --color-background: #0a1020;
+  --color-surface: #101a30;
+  --color-card: #0c1526;
+  --color-primary: #3b82f6;
+  --color-primary-light: #60a5fa;
+  --color-primary-dark: #1d4ed8;
+  --color-accent: #f59e0b;
+  --color-gold: #fbbf24;
+}
+
+:root[data-theme='escolar'] {
+  --color-background: #0a0f1a;
+  --color-surface: #101828;
+  --color-card: #0c1322;
+  --color-primary: #2563eb;
+  --color-primary-light: #3b82f6;
+  --color-primary-dark: #1e40af;
+  --color-accent: #facc15;
+  --color-gold: #fde047;
 }

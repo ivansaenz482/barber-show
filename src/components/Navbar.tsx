@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Menu, Scissors, X } from 'lucide-react'
+import { useSettings } from '../context/settings-context'
+import { themeDef } from '../lib/themes'
 
 const links = [
   { label: 'Inicio', href: '#inicio' },
@@ -17,6 +19,8 @@ const links = [
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false)
   const [open, setOpen] = useState(false)
+  const { settings } = useSettings()
+  const theme = themeDef(settings.theme)
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 30)
@@ -48,6 +52,13 @@ export default function Navbar() {
             </span>
           </span>
         </a>
+
+        {theme.key !== 'normal' && (
+          <span className="ml-1 hidden items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-primary-light md:inline-flex">
+            <span>{theme.emoji}</span>
+            {theme.label}
+          </span>
+        )}
 
         <ul className="hidden items-center gap-7 lg:flex">
           {links.map((link) => (

@@ -17,6 +17,7 @@ import {
   Image as ImageIcon,
   Layers,
   Lock,
+  Palette,
   Plus,
   QrCode,
   RotateCcw,
@@ -57,6 +58,7 @@ import type {
   Reward,
 } from '../lib/types'
 import { clientPoints, effectiveStatus, levelForCuts, STATUS_META, downloadCsv } from '../lib/loyalty'
+import { THEMES, type ThemeKey } from '../lib/themes'
 import { socialIcon } from '../lib/social-icons'
 
 interface BarcodeDetectorLike {
@@ -246,6 +248,7 @@ const tabs = [
   { key: 'orders', label: 'Pedidos', icon: ClipboardList },
   { key: 'accounting', label: 'Contabilidad', icon: Wallet },
   { key: 'qr', label: 'QR de registro', icon: QrCode },
+  { key: 'theme', label: 'Temporada', icon: Palette },
   { key: 'settings', label: 'Ajustes', icon: SettingsIcon },
 ]
 
@@ -396,6 +399,7 @@ export default function AdminPanel() {
                   {tab === 'orders' && <OrdersTab />}
                   {tab === 'accounting' && <AccountingTab />}
                   {tab === 'qr' && <QrTab />}
+                  {tab === 'theme' && <ThemeTab />}
                   {tab === 'settings' && (
                     <SettingsTab
                       settings={settings}
@@ -1296,6 +1300,75 @@ function AccountingTab() {
           </ul>
         )}
       </div>
+    </div>
+  )
+}
+
+function ThemeTab() {
+  const { settings, updateSettings } = useSettings()
+  const current = settings.theme ?? 'normal'
+  const [saved, setSaved] = useState(false)
+
+  const select = (key: ThemeKey) => {
+    updateSettings({ ...settings, theme: key })
+    setSaved(true)
+    setTimeout(() => setSaved(false), 2500)
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+      <p className="text-sm text-slate-300">
+        Elige el diseño según la temporada. Los colores y el banner de la página cambian al instante
+        para todos los visitantes.
+      </p>
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        {THEMES.map((t) => {
+          const active = current === t.key
+          return (
+            <button
+              key={t.key}
+              type="button"
+              onClick={() => select(t.key)}
+              className={`flex items-start gap-3 rounded-2xl border p-4 text-left transition-all ${
+                active
+                  ? 'border-primary bg-primary/10 shadow-lg shadow-primary/10'
+                  : 'border-primary/15 bg-surface hover:border-primary/40'
+              }`}
+            >
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-card text-2xl">
+                {t.emoji}
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="flex flex-wrap items-center gap-2 font-semibold text-white">
+                  {t.label}
+                  {active && (
+                    <span className="rounded-full bg-gradient-to-r from-primary to-accent px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-background">
+                      Activo
+                    </span>
+                  )}
+                </p>
+                <p className="mt-0.5 text-xs text-slate-400">{t.description}</p>
+                <div className="mt-2 flex gap-1.5">
+                  {t.swatch.map((c) => (
+                    <span
+                      key={c}
+                      className="h-4 w-4 rounded-full border border-white/15"
+                      style={{ backgroundColor: c }}
+                    />
+                  ))}
+                </div>
+              </div>
+            </button>
+          )
+        })}
+      </div>
+
+      {saved && (
+        <p className="rounded-xl border border-primary/30 bg-primary/10 px-4 py-3 text-center text-sm font-semibold text-primary-light">
+          Diseño actualizado correctamente.
+        </p>
+      )}
     </div>
   )
 }

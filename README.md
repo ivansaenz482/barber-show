@@ -37,6 +37,7 @@ Sitio web profesional para una barbería (barber show) de marca **EXCLUSIVE**, c
 | Comisión por barbero | % de comisión configurable y cálculo de cuánto pagarle a cada barbero |
 | Ranking de barberos | Quién corta más, cuánto efectivo genera, su comisión y calificación promedio |
 | Happy Hour | Descuento automático en días y horarios de poca demanda que el admin configura |
+| Modos de temporada | El admin cambia el diseño completo con un botón: Halloween, Navidad, playera, San Valentín, Día del Padre, temporada escolar o edición normal |
 | Visitas y cortes | Cada visita y cada corte se registra para estadísticas |
 | Panel de administración | Estadísticas, CRUD de servicios/productos/promociones/premios, clientes, pedidos, QR y ajustes |
 | Mejores vendidos | El panel calcula los productos más vendidos desde los pedidos |
@@ -88,7 +89,7 @@ La configuración de Vercel vive en `vercel.json` (framework Vite, build `npm ru
 
 ## Conectar Firebase (opcional, recomendado)
 
-La web usa **Firebase Firestore** (proyecto `barber-show-6771f`), cuyo plan gratuito (Spark) soporta holgadamente más de **1000 clientes**: 1 GiB de almacenamiento, 50 000 lecturas y 20 000 escrituras gratis por día, sin tarjeta de crédito. Sin configurar nada, la web funciona en **modo demo** (localStorage). Para reconectar o cambiar de proyecto:
+La web usa **Firebase Firestore** (proyecto `barber-show-6771f`), cuyo plan gratuito (Spark) soporta muchísimos más de **500 usuarios** (realmente decenas de miles): 1 GiB de almacenamiento, 50 000 lecturas y 20 000 escrituras gratis por día, sin tarjeta de crédito. No hace falta cambiar de base de datos para 500 clientes. Sin configurar nada, la web funciona en **modo demo** (localStorage). Para reconectar o cambiar de proyecto:
 
 1. Entra en https://console.firebase.google.com y crea un proyecto (nombre: `barber-show`).
 2. Ve a **Compilación → Firestore Database → Crear base de datos** → elige "Modo de prueba" (se puede endurecer después) y una región cercana.
@@ -123,7 +124,8 @@ La web incluye un **panel de administración** completo con pestañas:
 11. **Pedidos** — pedidos de la tienda recibidos.
 12. **Contabilidad** — ingresos del mes, **gastos por categoría**, ganancia neta, **comisión por barbero** y **exportación a CSV**.
 13. **QR de registro** — código QR listo para imprimir y colocar en la barbería.
-14. **Ajustes** — celular, correo, dirección, WhatsApp, redes, horarios y **programa de fidelidad** (puntos, referidos y Happy Hour).
+14. **Temporada** — botones para cambiar el diseño completo de la página según la temporada (Halloween, Navidad, playera, San Valentín, Día del Padre, temporada escolar o edición normal).
+15. **Ajustes** — celular, correo, dirección, WhatsApp, redes, horarios y **programa de fidelidad** (puntos, referidos y Happy Hour).
 
 Para entrar: haz clic en **"Administrar página"** (enlace pequeño en el footer) e ingresa la contraseña. Por defecto es: `exclusive123`
 

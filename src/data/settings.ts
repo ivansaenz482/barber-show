@@ -1,3 +1,5 @@
+import type { ThemeKey } from '../lib/themes'
+
 export interface SocialLink {
   id: string
   label: string
@@ -36,6 +38,7 @@ export interface SiteSettings {
   socials: SocialLink[]
   hours: HoursEntry[]
   loyalty: LoyaltyConfig
+  theme: ThemeKey
 }
 
 export const ADMIN_PASSWORD = 'exclusive123'
@@ -71,6 +74,7 @@ export const defaultSettings: SiteSettings = {
       discountPct: 20,
     },
   },
+  theme: 'normal',
 }
 
 export const STORAGE_KEY = 'exclusive-settings'
