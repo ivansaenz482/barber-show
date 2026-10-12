@@ -37,7 +37,7 @@ Sitio web profesional para una barbería (barber show) de marca **EXCLUSIVE**, c
 | Comisión por barbero | % de comisión configurable y cálculo de cuánto pagarle a cada barbero |
 | Ranking de barberos | Quién corta más, cuánto efectivo genera, su comisión y calificación promedio |
 | Happy Hour | Descuento automático en días y horarios de poca demanda que el admin configura |
-| Modos de temporada | El admin cambia el diseño completo con un botón: Halloween, Navidad, playera, San Valentín, Día del Padre, temporada escolar o edición normal |
+| Modos de temporada | El admin cambia el diseño completo con un botón: Halloween, Navidad, playera, San Valentín, Día del Padre, temporada escolar o edición normal. Incluye efectos animados ligeros (nieve en Navidad, murciélagos en Halloween que entran volando, corazones, etc.) con auto-pausa y respeto a "reducir movimiento" |
 | Menú lateral | La navegación es un panel lateral oculto que se abre con una pestaña en el borde derecho, para no chocar con el banner de registro |
 | Visitas y cortes | Cada visita y cada corte se registra para estadísticas |
 | Panel de administración | Estadísticas, CRUD de servicios/productos/promociones/premios, clientes, pedidos, QR y ajustes |

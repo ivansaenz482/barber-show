@@ -1,4 +1,5 @@
 import AnimatedBackground from './components/AnimatedBackground'
+import SeasonalEffects from './components/SeasonalEffects'
 import SideMenu from './components/SideMenu'
 import Hero from './components/Hero'
 import ClientBanner from './components/ClientBanner'
@@ -28,6 +29,7 @@ function App() {
     <SettingsProvider>
       <DataProvider>
         <AnimatedBackground />
+        <SeasonalEffects />
         <SideMenu />
         <ClientBanner />
         <main>
