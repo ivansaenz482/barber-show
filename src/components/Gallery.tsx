@@ -98,7 +98,7 @@ export default function Gallery() {
               onClick={(e) => e.stopPropagation()}
             >
               <img
-                src={current.src.replace('w=900', 'w=1600')}
+                src={current.src.replace('w=700', 'w=1600')}
                 alt={current.title}
                 className="max-h-[85vh] w-auto object-contain"
               />

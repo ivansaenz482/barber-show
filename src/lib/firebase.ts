@@ -1,19 +1,35 @@
-import { initializeApp, type FirebaseApp } from 'firebase/app'
-import { getFirestore, type Firestore } from 'firebase/firestore'
 import { firebaseConfig, isFirebaseConfigured } from './firebase-config'
+import type { Firestore } from 'firebase/firestore'
 
-let app: FirebaseApp | null = null
-let firestore: Firestore | null = null
+type FirestoreSdk = typeof import('firebase/firestore')
 
-if (isFirebaseConfigured()) {
-  try {
-    app = initializeApp(firebaseConfig)
-    firestore = getFirestore(app)
-  } catch {
-    app = null
-    firestore = null
-  }
+export interface Cloud {
+  db: Firestore
+  sdk: FirestoreSdk
 }
 
-export { app, firestore }
-export const isCloudConnected = () => firestore !== null
+let ready: Promise<Cloud | null> | null = null
+
+export function isCloudConnected() {
+  return isFirebaseConfigured()
+}
+
+export function getCloud(): Promise<Cloud | null> {
+  if (!ready) {
+    ready = (async () => {
+      if (!isFirebaseConfigured()) return null
+      try {
+        const [appMod, sdk] = await Promise.all([
+          import('firebase/app'),
+          import('firebase/firestore'),
+        ])
+        const app = appMod.initializeApp(firebaseConfig)
+        const db = sdk.getFirestore(app)
+        return { db, sdk }
+      } catch {
+        return null
+      }
+    })()
+  }
+  return ready
+}

@@ -6,7 +6,7 @@ Sitio web profesional para una barbería (barber show) de marca **EXCLUSIVE**, c
 
 ## Secciones
 
-- **Inicio (Hero)** — portada con foto de la barbería, fondo shader animado (ShaderGradient) y tarjetas con efecto **liquid glass**
+- **Inicio (Hero)** — portada con foto de la barbería, logo principal y llamados a la acción
 - **Servicios** — cortes para adultos, jóvenes y niños
 - **Carrusel** — galería automática con transiciones y controles
 - **Galería** — filtros por categoría (La Barbería / Adultos / Jóvenes) y lightbox
@@ -53,8 +53,6 @@ Sitio web profesional para una barbería (barber show) de marca **EXCLUSIVE**, c
 | Vite | 8 | Compilador y dev server |
 | Tailwind CSS | 4 | Estilos y diseño |
 | Framer Motion | 13 | Animaciones |
-| ShaderGradient | 2 | Fondo con degradado animado (shader) |
-| Liquid Glass | 1 | Efecto de vidrio líquido en tarjetas del Hero |
 | Lucide React | 1 | Iconos |
 | Firebase | 12 | Backend gratuito (Firestore + Auth + Storage) |
 | oxlint | 1 | Revisión de código |
@@ -138,6 +136,6 @@ Notas:
 - Las imágenes del carrusel y la galería son fotos de muestra de Unsplash (URLs públicas). Reemplázalas en `src/data/images.ts` por las fotos reales de tu barbería.
 - La paleta de colores se define en `src/index.css` dentro del bloque `@theme` (estilo barbería profesional: negro `#0a0a0a` con acentos dorados `#d4af37`).
 - El QR del panel usa el servicio gratuito `api.qrserver.com`; apunta a la URL de tu sitio.
-- El fondo shader del Hero se carga de forma diferida (lazy), se monta solo cuando el navegador está inactivo y se auto-desactiva en conexiones lentas, con ahorro de datos o si el usuario prefiere menos movimiento. Se puede encender/apagar con el botón "Fondo animado" en el Hero.
+- Rendimiento: Firebase se carga de forma diferida (no bloquea el primer render) y las imágenes del carrusel/galería usan carga diferida. Para el logo, coloca la imagen en `public/logo.png` (se usa en el encabezado y en el pie); si no existe, se muestra el logo de tijeras por defecto. También se puede usar como icono de la app generando los PNG cuadrados en `public/icons/`.
 - El registro del cliente pide solo **nombre y celular**; los datos extra (Gmail, cédula y cumpleaños) son opcionales y están en un desplegable, para que reservar sea lo más rápido posible.
 - El cliente elige con cuál de los 3 barberos quiere cortarse al reservar; el panel registra cortes e ingresos por barbero.
