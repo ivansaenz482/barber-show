@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { CalendarCheck, Menu, X } from 'lucide-react'
+import { CalendarCheck, Menu, Smartphone, X } from 'lucide-react'
 import BrandLogo from './BrandLogo'
 import ShareQr from './ShareQr'
 import { useSettings } from '../context/settings-context'
@@ -20,8 +20,16 @@ const links = [
 
 export default function SideMenu() {
   const [open, setOpen] = useState(false)
+  const [installed, setInstalled] = useState(false)
   const { settings } = useSettings()
   const theme = themeDef(settings.theme)
+
+  useEffect(() => {
+    const standalone =
+      window.matchMedia('(display-mode: standalone)').matches ||
+      (window.navigator as unknown as { standalone?: boolean }).standalone === true
+    setInstalled(standalone)
+  }, [])
 
   useEffect(() => {
     document.body.style.overflow = open ? 'hidden' : ''
@@ -100,6 +108,20 @@ export default function SideMenu() {
               </nav>
 
               <ShareQr className="mt-3 inline-flex items-center justify-center gap-2 rounded-full border border-primary/40 py-3 font-bold text-primary-light transition-colors hover:bg-primary/10" />
+
+              {!installed && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOpen(false)
+                    window.dispatchEvent(new CustomEvent('exclusive:open-install'))
+                  }}
+                  className="mt-2 inline-flex items-center justify-center gap-2 rounded-full border border-primary/40 py-3 font-bold text-primary-light transition-colors hover:bg-primary/10"
+                >
+                  <Smartphone size={16} />
+                  Instalar app
+                </button>
+              )}
 
               <a
                 href="#citas"

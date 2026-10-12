@@ -32,6 +32,17 @@
     />
     <meta property="og:type" content="website" />
     <title>Exclusive Barber Show — Barbería Premium</title>
+    <script>
+      window.__pwaPrompt = null
+      window.addEventListener('beforeinstallprompt', function (e) {
+        e.preventDefault()
+        window.__pwaPrompt = e
+        window.dispatchEvent(new Event('pwa-prompt-ready'))
+      })
+      window.addEventListener('appinstalled', function () {
+        window.__pwaInstalled = true
+      })
+    </script>
   </head>
   <body>
     <div id="root"></div>
