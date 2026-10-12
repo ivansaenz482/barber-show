@@ -139,6 +139,16 @@ export interface PointMovement {
   date: string
 }
 
+export interface BirthdayClaim {
+  id: string
+  clientId: string
+  clientName: string
+  year: number
+  cedula: string
+  note: string
+  date: string
+}
+
 export interface Redemption {
   id: string
   clientId: string

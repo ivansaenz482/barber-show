@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import {
   Award,
+  Cake,
   Check,
   Copy,
   Gift,
@@ -27,6 +28,8 @@ export default function ClientAccount() {
     cutsByClient,
     redeemReward,
     openRegister,
+    isBirthday,
+    hasBirthdayClaim,
   } = useData()
   const { settings } = useSettings()
   const [copied, setCopied] = useState(false)
@@ -224,6 +227,24 @@ export default function ClientAccount() {
               </button>
             </div>
           </div>
+
+          {isBirthday && (
+            <div className="mt-4 rounded-2xl border border-gold/40 bg-gold/10 p-4">
+              <p className="flex items-center gap-2 text-sm font-bold text-gold">
+                <Cake size={16} /> ¡Feliz cumpleaños!
+              </p>
+              {hasBirthdayClaim(currentClient.id) ? (
+                <p className="mt-1 text-xs leading-relaxed text-slate-200">
+                  Tu constancia de cumpleaños ya está registrada. ¡Disfruta tu corte gratis hoy!
+                </p>
+              ) : (
+                <p className="mt-1 text-xs leading-relaxed text-slate-200">
+                  Para tu corte GRATIS, presenta tu cédula en la barbería. El administrador registrará
+                  tu constancia de cumpleaños (válida una vez al año).
+                </p>
+              )}
+            </div>
+          )}
         </motion.div>
 
         <motion.div

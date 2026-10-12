@@ -1,5 +1,5 @@
 import AnimatedBackground from './components/AnimatedBackground'
-import Navbar from './components/Navbar'
+import SideMenu from './components/SideMenu'
 import Hero from './components/Hero'
 import ClientBanner from './components/ClientBanner'
 import Marquee from './components/Marquee'
@@ -26,7 +26,7 @@ function App() {
     <SettingsProvider>
       <DataProvider>
         <AnimatedBackground />
-        <Navbar />
+        <SideMenu />
         <ClientBanner />
         <main>
           <Hero />

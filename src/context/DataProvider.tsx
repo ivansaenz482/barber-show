@@ -5,6 +5,7 @@ import type {
   Appointment,
   AppointmentStatus,
   Barber,
+  BirthdayClaim,
   Client,
   Expense,
   GalleryImage,
@@ -169,6 +170,7 @@ export default function DataProvider({ children }: { children: ReactNode }) {
   const [expenses, setExpenses] = useState<Expense[]>([])
   const [pointMovements, setPointMovements] = useState<PointMovement[]>([])
   const [redemptions, setRedemptions] = useState<Redemption[]>([])
+  const [birthdayClaims, setBirthdayClaims] = useState<BirthdayClaim[]>([])
   const [gallery, setGallery] = useState<GalleryImage[]>(galleryImages)
   const [stats, setStats] = useState<Stats>({ visits: 0, haircuts: 0 })
   const [currentClient, setCurrentClient] = useState<Client | null>(null)
@@ -193,6 +195,7 @@ export default function DataProvider({ children }: { children: ReactNode }) {
       store.subscribe<Expense>('expenses', setExpenses),
       store.subscribe<PointMovement>('pointMovements', setPointMovements),
       store.subscribe<Redemption>('redemptions', setRedemptions),
+      store.subscribe<BirthdayClaim>('birthdayClaims', setBirthdayClaims),
       store.subscribe<GalleryImage>('gallery', (items) =>
         setGallery([...items].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))),
       ),
@@ -640,6 +643,33 @@ export default function DataProvider({ children }: { children: ReactNode }) {
     [clients, awardPoints],
   )
 
+  const hasBirthdayClaim = useCallback(
+    (clientId: string) => {
+      const year = new Date().getFullYear()
+      return birthdayClaims.some((c) => c.clientId === clientId && c.year === year)
+    },
+    [birthdayClaims],
+  )
+
+  const addBirthdayClaim = useCallback(
+    async (clientId: string, note: string) => {
+      const client = clients.find((c) => c.id === clientId)
+      if (!client) return false
+      const year = new Date().getFullYear()
+      if (birthdayClaims.some((c) => c.clientId === clientId && c.year === year)) return false
+      await store.add('birthdayClaims', {
+        clientId,
+        clientName: client.name,
+        year,
+        cedula: client.cedula || '',
+        note,
+        date: new Date().toISOString(),
+      })
+      return true
+    },
+    [clients, birthdayClaims],
+  )
+
   const addToCart = useCallback((productId: string) => {
     setCart((c) => ({ ...c, [productId]: (c[productId] || 0) + 1 }))
   }, [])
@@ -712,6 +742,9 @@ export default function DataProvider({ children }: { children: ReactNode }) {
     expenses,
     pointMovements,
     redemptions,
+    birthdayClaims,
+    addBirthdayClaim,
+    hasBirthdayClaim,
     gallery,
     stats,
     currentClient,

@@ -151,8 +151,8 @@ export default function ClientRegisterModal() {
                   <p className="text-sm leading-relaxed text-slate-300">
                     {isBirthday ? (
                       <span className="font-bold text-gold">
-                        ¡Hoy es tu cumpleaños! Tu corte es GRATIS. Escanea el código de la barbería
-                        y preséntalo en caja.
+                        ¡Hoy es tu cumpleaños! Tu corte es GRATIS. Presenta tu cédula en caja para
+                        registrar tu constancia (válida una vez al año).
                       </span>
                     ) : (
                       <>

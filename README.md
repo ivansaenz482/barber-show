@@ -30,7 +30,7 @@ Sitio web profesional para una barbería (barber show) de marca **EXCLUSIVE**, c
 | Carnet digital QR | El cliente muestra su carnet; el admin lo escanea desde el panel para identificarlo y sumarle puntos |
 | Agenda día/semana | El admin ve las citas de hoy o de la semana y gestiona cada una (confirmar, completar, ausente) |
 | Turnos manuales | El admin puede dar un turno a un cliente que no maneja la tecnología (registrado o nuevo) |
-| Corte gratis de cumpleaños | El sistema detecta cumpleaños y activa el banner dorado "corte gratis" |
+| Corte gratis de cumpleaños | El sistema detecta cumpleaños y activa el banner dorado "corte gratis". Requiere **constancia**: el admin verifica la cédula y registra la constancia (válida una vez al año) |
 | Referidos | Cada cliente tiene un código; al invitar a un amigo, ambos ganan puntos |
 | Calificaciones | El cliente califica con estrellas cada corte completado; el admin ve el promedio por barbero |
 | Contabilidad | Ingresos (cortes y tienda), gastos por categoría y ganancia neta por mes, exportable a CSV |
@@ -38,6 +38,7 @@ Sitio web profesional para una barbería (barber show) de marca **EXCLUSIVE**, c
 | Ranking de barberos | Quién corta más, cuánto efectivo genera, su comisión y calificación promedio |
 | Happy Hour | Descuento automático en días y horarios de poca demanda que el admin configura |
 | Modos de temporada | El admin cambia el diseño completo con un botón: Halloween, Navidad, playera, San Valentín, Día del Padre, temporada escolar o edición normal |
+| Menú lateral | La navegación es un panel lateral oculto que se abre con una pestaña en el borde derecho, para no chocar con el banner de registro |
 | Visitas y cortes | Cada visita y cada corte se registra para estadísticas |
 | Panel de administración | Estadísticas, CRUD de servicios/productos/promociones/premios, clientes, pedidos, QR y ajustes |
 | Mejores vendidos | El panel calcula los productos más vendidos desde los pedidos |

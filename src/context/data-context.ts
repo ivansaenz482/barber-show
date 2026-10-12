@@ -3,6 +3,7 @@ import type {
   Appointment,
   AppointmentStatus,
   Barber,
+  BirthdayClaim,
   Client,
   Expense,
   GalleryImage,
@@ -37,6 +38,9 @@ export interface DataContextValue {
   expenses: Expense[]
   pointMovements: PointMovement[]
   redemptions: Redemption[]
+  birthdayClaims: BirthdayClaim[]
+  addBirthdayClaim: (clientId: string, note: string) => Promise<boolean>
+  hasBirthdayClaim: (clientId: string) => boolean
   gallery: GalleryImage[]
   stats: Stats
   currentClient: Client | null

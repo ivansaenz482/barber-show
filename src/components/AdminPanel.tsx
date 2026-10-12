@@ -2123,7 +2123,7 @@ function PlansTab() {
 }
 
 function ClientsTab() {
-  const { clients, appointments, cutsByClient, updateClientById, deleteClient, adjustClientPoints } =
+  const { clients, appointments, cutsByClient, updateClientById, deleteClient, adjustClientPoints, addBirthdayClaim, hasBirthdayClaim } =
     useData()
   const [editing, setEditing] = useState<string | null>(null)
   const [search, setSearch] = useState('')
@@ -2382,6 +2382,43 @@ function ClientsTab() {
                         {c.referralCode || '—'}
                       </p>
                     </div>
+
+                    {(() => {
+                      const now = new Date()
+                      const [y, m, d] = (c.birthDate || '').split('-').map(Number)
+                      const isBday = !!(y && m && d) && now.getMonth() + 1 === m && now.getDate() === d
+                      if (!isBday) return null
+                      const claimed = hasBirthdayClaim(c.id)
+                      return (
+                        <div className="mt-2 flex flex-wrap items-center gap-2 rounded-xl border border-gold/30 bg-gold/10 px-3 py-2">
+                          <Cake size={14} className="text-gold" />
+                          <span className="text-xs font-bold text-gold">¡Cumpleaños hoy! (corte gratis)</span>
+                          {claimed ? (
+                            <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-400">
+                              <BadgeCheck size={13} /> Constancia registrada este año
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                const note = window.prompt(
+                                  'Constancia de cumpleaños: verifica la cédula/identidad del cliente y describe la verificación:',
+                                  'Cédula verificada',
+                                )
+                                if (note === null) return
+                                const ok = await addBirthdayClaim(c.id, note)
+                                if (!ok) {
+                                  window.alert('Este cliente ya tiene constancia de cumpleaños este año.')
+                                }
+                              }}
+                              className="rounded-full border border-gold/50 px-3 py-1 text-xs font-bold text-gold transition-colors hover:bg-gold/20"
+                            >
+                              Registrar constancia
+                            </button>
+                          )}
+                        </div>
+                      )
+                    })()}
                   </>
                 )}
               </li>

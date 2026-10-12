@@ -4,7 +4,7 @@ import { heroBackground, heroFigure } from '../data/images'
 
 export default function Hero() {
   return (
-    <section id="inicio" className="relative flex min-h-screen items-center overflow-hidden pt-24">
+    <section id="inicio" className="relative flex min-h-screen items-center overflow-hidden pt-8">
       <div className="absolute inset-0 -z-10">
         <img
           src={heroBackground}
