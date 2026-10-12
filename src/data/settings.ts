@@ -35,6 +35,7 @@ export interface SiteSettings {
   address: string
   whatsapp: string
   mapEmbed: string
+  mapsLink: string
   socials: SocialLink[]
   hours: HoursEntry[]
   loyalty: LoyaltyConfig
@@ -50,6 +51,7 @@ export const defaultSettings: SiteSettings = {
   address: 'Elena Valle Schenonne, Parroquia Febres Cordero, 090408 Guayaquil, Ecuador',
   whatsapp: 'https://wa.me/15551234567',
   mapEmbed: 'https://www.google.com/maps?q=-2.2166967,-79.9230501&z=17&output=embed',
+  mapsLink: 'https://maps.app.goo.gl/JuAqu46FenbZLNXg9',
   socials: [
     { id: 'instagram', label: 'Instagram', url: 'https://instagram.com/exclusivebarber' },
     { id: 'facebook', label: 'Facebook', url: 'https://facebook.com/exclusivebarber' },

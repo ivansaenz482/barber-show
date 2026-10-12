@@ -2576,6 +2576,7 @@ function SettingsTab({
         <Field label="Correo electrónico" value={draft.email} onChange={(v) => setDraft((d) => ({ ...d, email: v }))} />
         <Field label="Dirección" value={draft.address} onChange={(v) => setDraft((d) => ({ ...d, address: v }))} />
         <Field label="WhatsApp (enlace wa.me)" value={draft.whatsapp} onChange={(v) => setDraft((d) => ({ ...d, whatsapp: v }))} />
+        <Field label="Google Maps (enlace 'Cómo llegar')" value={draft.mapsLink} onChange={(v) => setDraft((d) => ({ ...d, mapsLink: v }))} />
         <div className="sm:col-span-2">
           <Field label="Google Maps (enlace del mapa)" value={draft.mapEmbed} onChange={(v) => setDraft((d) => ({ ...d, mapEmbed: v }))} />
           <p className="mt-1.5 text-xs text-slate-500">

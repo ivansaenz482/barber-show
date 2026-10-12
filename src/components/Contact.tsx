@@ -179,7 +179,10 @@ export default function Contact() {
               </div>
             </div>
             <a
-              href={settings.mapEmbed.replace('&output=embed', '').replace('?output=embed', '')}
+              href={
+                settings.mapsLink ||
+                settings.mapEmbed.replace('&output=embed', '').replace('?output=embed', '')
+              }
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-2 rounded-full border border-primary/40 px-5 py-2 text-sm font-bold text-primary-light transition-colors hover:bg-primary/10"
