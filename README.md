@@ -1,6 +1,6 @@
 # Exclusive Barber Show — Barbería Premium
 
-Sitio web profesional para una barbería (barber show) de marca **EXCLUSIVE**, con diseño **dark premium turquesa**, listo para verse en cualquier parte del mundo mediante **GitHub Pages**.
+Sitio web profesional para una barbería (barber show) de marca **EXCLUSIVE**, con diseño **dark premium turquesa**, desplegado en **Vercel**.
 
 ![Tech](https://img.shields.io/badge/React-19-14b8a6) ![Tech](https://img.shields.io/badge/Vite-8-14b8a6) ![Tech](https://img.shields.io/badge/Tailwind-4-14b8a6) ![Tech](https://img.shields.io/badge/Framer_Motion-13-14b8a6) ![Tech](https://img.shields.io/badge/Firebase-12-14b8a6)
 
@@ -42,7 +42,7 @@ Sitio web profesional para una barbería (barber show) de marca **EXCLUSIVE**, c
 | Lucide React | 1 | Iconos |
 | Firebase | 12 | Backend gratuito (Firestore + Auth + Storage) |
 | oxlint | 1 | Revisión de código |
-| GitHub Actions | — | Despliegue automático |
+| Vercel | — | Despliegue automático |
 
 ## Puesta en marcha local
 
@@ -54,30 +54,26 @@ npm run lint       # revisar código
 npm run preview    # previsualizar la build
 ```
 
-## Desplegar en GitHub Pages
+## Desplegar en Vercel
 
-1. Crea un repositorio en GitHub (por ejemplo `barber-show`) y sube este proyecto.
+La web está desplegada en Vercel y conectada al repositorio de GitHub: cada `git push` a `main` publica automáticamente.
+
+- **URL de producción:** https://barber-show-iota.vercel.app
+- Panel de control: https://vercel.com (proyecto `barber-show`)
+
+Despliegue manual desde la terminal (opcional):
 
 ```bash
-git init
-git add .
-git commit -m "Barber Show: sitio web de barbería premium"
-git branch -M main
-git remote add origin https://github.com/TU_USUARIO/barber-show.git
-git push -u origin main
+npm i -g vercel
+vercel link --yes          # asociar el proyecto (solo la primera vez)
+vercel --prod              # publicar en producción
 ```
 
-2. En GitHub, entra a **Settings → Pages** y en "Source" elige **GitHub Actions** (no branch). Esto es necesario solo la primera vez.
-
-3. Sube cualquier cambio a `main` (o pulsa *Run workflow* en la pestaña **Actions**) y GitHub Actions compilará y publicará automáticamente en:
-
-```
-https://TU_USUARIO.github.io/barber-show/
-```
+La configuración de Vercel vive en `vercel.json` (framework Vite, build `npm run build`, salida `dist/`).
 
 ## Conectar Firebase (opcional, recomendado)
 
-La web funciona en **modo demo** (localStorage) sin configurar nada. Para que los datos (clientes, citas, pedidos, estadísticas) se compartan entre todos los dispositivos, conecta Firebase — es gratis y no pide tarjeta:
+La web usa **Firebase Firestore** (proyecto `barber-show-6771f`), cuyo plan gratuito (Spark) soporta holgadamente más de **1000 clientes**: 1 GiB de almacenamiento, 50 000 lecturas y 20 000 escrituras gratis por día, sin tarjeta de crédito. Sin configurar nada, la web funciona en **modo demo** (localStorage). Para reconectar o cambiar de proyecto:
 
 1. Entra en https://console.firebase.google.com y crea un proyecto (nombre: `barber-show`).
 2. Ve a **Compilación → Firestore Database → Crear base de datos** → elige "Modo de prueba" (se puede endurecer después) y una región cercana.
