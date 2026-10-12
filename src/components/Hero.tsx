@@ -1,12 +1,34 @@
+import { Suspense, lazy, useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { CalendarCheck, ChevronDown, Sparkle, Star, Users } from 'lucide-react'
+import LiquidGlass from 'liquid-glass-react'
 import { heroBackground } from '../data/images'
+
+const Hero3D = lazy(() => import('./three/Hero3D'))
+const ShaderBackdrop = lazy(() => import('./ShaderBackdrop'))
 
 const stats = [
   { value: '12+', label: 'Años de experiencia' },
   { value: '8k+', label: 'Cortes realizados' },
   { value: '4.9', label: 'Valoración media', icon: true },
 ]
+
+function useWebGL() {
+  const [ok, setOk] = useState(false)
+  useEffect(() => {
+    try {
+      const canvas = document.createElement('canvas')
+      const gl =
+        canvas.getContext('webgl2') ||
+        canvas.getContext('webgl') ||
+        canvas.getContext('experimental-webgl')
+      setOk(!!gl)
+    } catch {
+      setOk(false)
+    }
+  }, [])
+  return ok
+}
 
 function BarberPole() {
   return (
@@ -34,17 +56,27 @@ function BarberPole() {
 }
 
 export default function Hero() {
+  const webgl = useWebGL()
+
   return (
     <section id="inicio" className="relative flex min-h-screen items-center overflow-hidden pt-24">
       <div className="absolute inset-0 -z-10">
         <img
           src={heroBackground}
           alt="Barbería en movimiento"
-          className="h-full w-full scale-105 object-cover opacity-40 animate-kenburns"
+          className="h-full w-full scale-105 object-cover opacity-30 animate-kenburns"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0a]/85 via-[#0a0a0a]/70 to-[#0a0a0a]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_20%,rgba(2,18,15,0.6)_100%)]" />
+        {webgl && (
+          <div className="absolute inset-0 opacity-70">
+            <Suspense fallback={null}>
+              <ShaderBackdrop />
+            </Suspense>
+          </div>
+        )}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0a]/85 via-[#0a0a0a]/65 to-[#0a0a0a]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_18%,rgba(2,18,15,0.68)_100%)]" />
       </div>
+
       <div className="mx-auto grid w-full max-w-7xl items-center gap-12 px-5 py-16 lg:grid-cols-2 lg:px-8">
         <div>
           <motion.div
@@ -115,7 +147,7 @@ export default function Hero() {
             className="mt-9 flex flex-wrap items-center gap-4"
           >
             <a
-              href="#contacto"
+              href="#citas"
               className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary to-accent px-7 py-3.5 font-bold text-background shadow-lg shadow-primary/30 transition-transform hover:scale-105"
             >
               <CalendarCheck size={18} />
@@ -133,16 +165,29 @@ export default function Hero() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.4 }}
-            className="mt-12 grid grid-cols-3 gap-6 border-t border-primary/15 pt-8"
+            className="mt-12 grid max-w-lg grid-cols-3 gap-3"
           >
             {stats.map((s) => (
-              <div key={s.label}>
-                <div className="flex items-center gap-1 font-display text-3xl font-extrabold text-white">
-                  {s.value}
-                  {s.icon && <Star size={20} className="fill-gold text-gold" />}
+              <LiquidGlass
+                key={s.label}
+                cornerRadius={18}
+                blurAmount={0.12}
+                saturation={1.4}
+                displacementScale={48}
+                aberrationIntensity={1.4}
+                padding="14px 12px"
+                style={{ width: '100%' }}
+              >
+                <div className="text-center">
+                  <div className="flex items-center justify-center gap-1 font-display text-2xl font-extrabold text-white">
+                    {s.value}
+                    {s.icon && <Star size={16} className="fill-gold text-gold" />}
+                  </div>
+                  <p className="mt-1 text-[10px] uppercase leading-tight tracking-wider text-slate-300">
+                    {s.label}
+                  </p>
                 </div>
-                <p className="mt-1 text-xs uppercase tracking-wider text-slate-400">{s.label}</p>
-              </div>
+              </LiquidGlass>
             ))}
           </motion.div>
         </div>
@@ -155,10 +200,29 @@ export default function Hero() {
         >
           <div className="relative">
             <div className="absolute inset-0 -z-10 mx-auto h-full w-3/4 rounded-[3rem] bg-gradient-to-b from-primary/30 to-accent/10 blur-2xl" />
-            <BarberPole />
-            <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-2 rounded-full bg-slate-900/70 px-5 py-2.5 text-sm font-semibold text-slate-200 shadow-xl backdrop-blur">
-              <Users size={16} className="text-primary-light" />
-              +8,000 clientes felices
+            <div className="relative h-[520px] w-full">
+              {webgl ? (
+                <Suspense fallback={<BarberPole />}>
+                  <Hero3D />
+                </Suspense>
+              ) : (
+                <BarberPole />
+              )}
+            </div>
+            <div className="absolute bottom-2 left-1/2 -translate-x-1/2">
+              <LiquidGlass
+                cornerRadius={999}
+                blurAmount={0.14}
+                saturation={1.4}
+                displacementScale={56}
+                aberrationIntensity={1.6}
+                padding="10px 20px"
+              >
+                <span className="flex items-center gap-2 whitespace-nowrap text-sm font-semibold text-slate-100">
+                  <Users size={16} className="text-primary-light" />
+                  +8,000 clientes felices
+                </span>
+              </LiquidGlass>
             </div>
           </div>
         </motion.div>

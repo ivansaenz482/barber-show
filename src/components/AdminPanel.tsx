@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import type { ElementType, FormEvent } from 'react'
+import type { ComponentType, FormEvent } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
   BadgeCheck,
@@ -62,6 +62,8 @@ import { socialIcon } from '../lib/social-icons'
 interface BarcodeDetectorLike {
   detect: (source: CanvasImageSource) => Promise<{ rawValue: string }[]>
 }
+
+type IconComponent = ComponentType<{ size?: number; className?: string }>
 
 function compressImage(file: File): Promise<string> {
   return new Promise((resolve) => {
@@ -127,7 +129,7 @@ function Tabs({
   active,
   onChange,
 }: {
-  tabs: { key: string; label: string; icon: ElementType }[]
+  tabs: { key: string; label: string; icon: IconComponent }[]
   active: string
   onChange: (key: string) => void
 }) {
@@ -160,7 +162,7 @@ function StatCard({
 }: {
   label: string
   value: string | number
-  icon: ElementType
+  icon: IconComponent
   accent: string
 }) {
   return (
